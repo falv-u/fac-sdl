@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #include "log.h"
@@ -6,7 +7,9 @@
 
 static const nivel_log NIVEL_MINIMO = LOG_LEVEL;
 
-void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...) {
+void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...)
+{
+	FILE *archivo = fopen("log.txt", "w");
 	if (level < NIVEL_MINIMO) {
 		return;
 	}

@@ -3,6 +3,7 @@
 
 /* librerias sistema no estandar */
 /* headers propios */
+#include "SDL_video.h"
 #include "commons.h"
 #include "log.h"
 
@@ -12,6 +13,8 @@ int main(int argc, char** argv)
 {
 	
 	ESTADO_ACTUAl estado_juego = ESTADO_MENU;
+	SDL_Window *ventana = crear_ventana();
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
@@ -22,16 +25,18 @@ int main(int argc, char** argv)
 
 	bool corriendo = true;
 
-	crear_ventana();
-   	while (corriendo)
+   while (corriendo)
 	{
 	
       SDL_Event evento;
         
       while (SDL_PollEvent(&evento))
 		{
-			if (evento.type == SDL_QUIT) corriendo = false;
-				
+			if (evento.type == SDL_QUIT) 
+			{
+				game_log(LOG_INFO, "Cerrando ventana por accion del usuario a traves del servidor grafico ", const char *mensaje_SDL, ...)
+				corriendo = false;
+			}	
 			switch (estado_juego)
 			{
 				case ESTADO_MENU:
@@ -58,6 +63,6 @@ int main(int argc, char** argv)
 
 void end( SDL_Window *ventana) 
 {
-
+	SDL_DestroyWindow(ventana);
 	SDL_Quit();
 }

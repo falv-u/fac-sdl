@@ -1,7 +1,8 @@
 
+#include "SDL_video.h"
 #include "commons.h"
 
-void crear_ventana()
+SDL_Window *crear_ventana()
 {
 	SDL_Window *ventana = SDL_CreateWindow(
         "feel, amplify and conquer en SDL2", 
@@ -12,10 +13,7 @@ void crear_ventana()
         SDL_WINDOW_SHOWN
     );
 
-	
-	SDL_Delay(3000); 
-
-	SDL_DestroyWindow(ventana);
+	return ventana;
 }
 
 

@@ -82,7 +82,7 @@ void update(GameState *gs, InputState *input);
 
 
 /*   renderer.c */
-void crear_ventana();
+SDL_Window *crear_ventana();
 
 /* ----------------------------------------------------------------
    ui.c

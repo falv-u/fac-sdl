@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
 	} else {
 
-		game_log(LOG_INFO, "¡Componentes de SDL iniciados correctamente!\n");
+		game_log(LOG_INFO, "¡Componentes de SDL iniciados correctamente!\n", 0);
 	}
 
 	bool corriendo = true;

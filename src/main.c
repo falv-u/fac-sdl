@@ -1,11 +1,15 @@
+#include <stdio.h>
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
-#include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3/SDL_main.h>
 
-int main(void)
+#define LARGO 420
+#define ANCHO 600
+int main(int argc, char** argv)
 {
-	SDL_Init(SDL_INIT_VIDEO);
-
-	SDL_Quit();
 	return 0;
+}
+
+void end() 
+{
+	SDL_Quit();
 }

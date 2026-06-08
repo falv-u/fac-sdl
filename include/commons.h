@@ -15,6 +15,7 @@
 #define LARGO_PANTALLA 400
 #define ANCHO_PANTALLA 600
 
+#define LOG_LEVEL LOG_DEBUG
 /* Maquina de estado */
 
 typedef enum {

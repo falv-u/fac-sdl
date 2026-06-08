@@ -1,7 +1,7 @@
 set_project("fac") 
 set_languages("c11")
 
-add_requires("libsdl3", {system = true})
+add_requires("libsdl2", {system = true})
 
 add_rules("mode.debug", "mode.release")
 
@@ -10,7 +10,7 @@ target("game")
    add_files("src/*.c")
    add_includedirs("include")
    
-   add_packages("libsdl3")
+   add_packages("libsdl2")
    
    if is_plat("linux") then
       add_cflags("-Wall", "-Wextra", {tools = "clang"})

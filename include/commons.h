@@ -1,34 +1,30 @@
 #ifndef COMMONS_H
 #define COMMONS_H
 
-/* ================================================================
-   COMMONS.H — Header central del proyecto
-   Todos los .c incluyen este archivo y solo este.
-   Agrega aquí solo lo que sea necesario en múltiples módulos.
-   ================================================================ */
-
-/* ================================================================
-   INCLUDES (librerias)
-   ================================================================ */
-
-#include <stdio.h>
 #include <stdbool.h>
 
-/* ================================================================
-   DEFINE (constantes)
-   ================================================================ */
 
+/* SDL libs */
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_main.h>
+#include "SDL_video.h"
+
+/* Macros */
 #define TARGET_FPS      60
 
-/* ================================================================
-   ENUMS (manejo de estados)
-   ================================================================ */
+#define LARGO_PANTALLA 400
+#define ANCHO_PANTALLA 600
+
+/* Maquina de estado */
 
 typedef enum {
-    SCREEN_MENU,
-    SCREEN_PLAYING,
-    SCREEN_GAMEOVER
-} Screen;
+    ESTADO_MENU,
+	 ESTADO_PAUSA,
+	 ESTADO_CARGA,
+    ESTADO_JUEGO,
+    ESTADO_GAMEOVER,
+	 ESTADO_SALIR,
+} ESTADO_ACTUAl;
 
 /* ================================================================
    ESTRUCTURAS
@@ -50,8 +46,9 @@ typedef struct {
    está pasando en el juego en un momento dado.
    Casi todos los módulos la leen. Solo update.c la modifica.
    ---------------------------------------------------------------- */
+
 typedef struct {
-    Screen screen;      /* pantalla activa */
+    ESTADO_ACTUAl screen;      /* pantalla activa */
     InputState input;    /* estado del input */  
     int level; /*nivel actual*/
 
@@ -70,6 +67,7 @@ typedef struct {
    ---------------------------------------------------------------- */
 void game_init(GameState *gs);
 
+
 /* ----------------------------------------------------------------
    input.c
    ---------------------------------------------------------------- */
@@ -82,11 +80,8 @@ void input_update(InputState *input);
 void update(GameState *gs, InputState *input);
 
 
-/* ----------------------------------------------------------------
-   renderer.c
-   ---------------------------------------------------------------- */
-void render_gameview(GameState *gs);
-
+/*   renderer.c */
+void crear_ventana();
 
 /* ----------------------------------------------------------------
    ui.c
@@ -98,6 +93,9 @@ void render_ui(GameState *gs);
    assets.c
    ---------------------------------------------------------------- */
 void assets_load(void);
+
+/* COMMONS_H */
+void iniciar_componente(bool test, const char *componente);
 
 /* ----------------------------------------------------------------
    entities.c

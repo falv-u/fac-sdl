@@ -1,21 +1,29 @@
 #include "commons.h"
 
 
-ESTADO_ACTUAl juego_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_ACTUAl estado_actual)
+ESTADO_ACTUAl juego_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_ACTUAl estado_actual, entidad_rec_simple *rec )
 {
-        // A. Limpiar la pantalla (establece el color de fondo y borra el buffer)
-        SDL_SetRenderDrawColor(ev_gl.renderizado, 0, 0, 0, 255); // Negro
-        SDL_RenderClear(ev_gl.renderizado);
 
-        // B. Dibujar geometría (un rectángulo rojo)
-        SDL_Rect rectangulo = { 200, 150, 400, 300 }; // {x, y, ancho, alto}
+	if (evento->type == SDL_KEYDOWN )
+	{
+		if (evento->key.keysym.sym == SDLK_UP)
+			rec->rectangulo.y -= 10; 
+		if (evento->key.keysym.sym == SDLK_DOWN)
+			rec->rectangulo.y += 10; 
+		if (evento->key.keysym.sym == SDLK_RIGHT)
+			rec->rectangulo.x += 10; 
+		if (evento->key.keysym.sym == SDLK_LEFT)
+			rec->rectangulo.x -= 10; 
+	}
+	SDL_SetRenderDrawColor(ev_gl.renderizado, 0, 0, 0, 255); // Negro
+	SDL_RenderClear(ev_gl.renderizado);
+	
+	SDL_SetRenderDrawColor(ev_gl.renderizado, 255, 0, 0, 255); // Rojo
 
-        SDL_SetRenderDrawColor(ev_gl.renderizado, 255, 0, 0, 255); // Rojo
-        SDL_RenderFillRect(ev_gl.renderizado, &rectangulo);
+	SDL_RenderFillRect(ev_gl.renderizado, &rec->rectangulo);
 
-        // C. Presentar los cambios en pantalla
-        SDL_RenderPresent(ev_gl.renderizado);
-        SDL_Delay(16); // ~60 FPS
+	SDL_RenderPresent(ev_gl.renderizado);
+	SDL_Delay(9); 
 	return estado_actual;
 }
 

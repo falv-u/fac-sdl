@@ -18,6 +18,7 @@
 #define LARGO_PANTALLA 720
 #define ANCHO_PANTALLA 1280
 #define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
+
 typedef enum {
     ESTADO_MENU,
 	 ESTADO_PAUSA,
@@ -25,8 +26,11 @@ typedef enum {
     ESTADO_JUEGO,
     ESTADO_GAMEOVER,
 	 ESTADO_SALIR,
-} ESTADO_ACTUAl;
+} ESTADO_ACTUAL;
 
+typedef struct {
+	SDL_Rect rectangulo;
+} entidad_rec_simple ;
 /* ================================================================
    ESTRUCTURAS
    ================================================================ */
@@ -67,6 +71,7 @@ void Pantalla_Completa(SDL_Window *ventana);
 /* void player_jump(GameState *gs);                              */
 /* bool check_collision(float x1, float y1, float x2, float y2); */
 
-ESTADO_ACTUAl menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAl estado_actual);
-ESTADO_ACTUAl juego_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAl estado_actual);
+ESTADO_ACTUAL menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual);
+ESTADO_ACTUAL juego_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual, entidad_rec_simple *rec);
+void generar_rectangulo(entidad_rec_simple *rectangulo);
 #endif

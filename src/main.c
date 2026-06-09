@@ -1,6 +1,5 @@
 /* Librerias estandar */
 #include <stdbool.h>
-#include <stdio.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -14,6 +13,7 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 int main(int argc, char** argv)
 {
 	eventos_globales ev_gl;
+	entidad_rec_simple rec;
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
@@ -21,13 +21,18 @@ int main(int argc, char** argv)
 
 		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 	}
-
-	ESTADO_ACTUAl estado_juego = ESTADO_MENU;
+	ESTADO_ACTUAL estado_juego = ESTADO_MENU;
 	
 	ev_gl.corriendo = true;
 	ev_gl.ventana = crear_ventana();
 	ev_gl.renderizado = SDL_CreateRenderer(ev_gl.ventana, -1, SDL_RENDERER_ACCELERATED);
 	SDL_RenderSetLogicalSize(ev_gl.renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
+	
+	rec.rectangulo.x = 250;
+	rec.rectangulo.y = 250;
+	rec.rectangulo.h = 100;
+	rec.rectangulo.w = 100;
+
    while (ev_gl.corriendo)
 	{
       SDL_Event evento;
@@ -35,8 +40,6 @@ int main(int argc, char** argv)
       while (SDL_PollEvent(&evento))
 		{
 			eventos_globales_accionados_simples(&ev_gl, evento);
-			if (evento.key.keysym.sym == SDLK_F9 && evento.key.repeat == 0)
-				Pantalla_Completa(ev_gl.ventana);
 
 			switch (estado_juego)
 				{
@@ -48,7 +51,7 @@ int main(int argc, char** argv)
 					case ESTADO_PAUSA:
 						break;
 					case ESTADO_JUEGO:
-						estado_juego=juego_principal(ev_gl, &evento, estado_juego);
+						estado_juego=juego_principal(ev_gl, &evento, estado_juego, &rec);
 						break;
 					case ESTADO_GAMEOVER:
 						break;

@@ -17,3 +17,4 @@ SDL_Window *crear_ventana()
 }
 
 
+

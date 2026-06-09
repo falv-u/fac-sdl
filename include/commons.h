@@ -15,8 +15,8 @@
 /* Macros */
 #define TARGET_FPS      60
 
-#define LARGO_PANTALLA 400
-#define ANCHO_PANTALLA 600 
+#define LARGO_PANTALLA 720
+#define ANCHO_PANTALLA 1280
 #define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
 typedef enum {
     ESTADO_MENU,

@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+#include "SDL_events.h"
+#include "SDL_render.h"
+#include "log.h"
 
 /* SDL libs */
 #include <SDL2/SDL.h>
@@ -13,11 +16,8 @@
 #define TARGET_FPS      60
 
 #define LARGO_PANTALLA 400
-#define ANCHO_PANTALLA 600
-
-#define LOG_LEVEL LOG_DEBUG
-/* Maquina de estado */
-
+#define ANCHO_PANTALLA 600 
+#define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
 typedef enum {
     ESTADO_MENU,
 	 ESTADO_PAUSA,
@@ -41,54 +41,16 @@ typedef struct {
 } InputState;
 
 
-/* ----------------------------------------------------------------
-   Estado del juego
-   La estructura central del proyecto. Representa todo lo que
-   está pasando en el juego en un momento dado.
-   Casi todos los módulos la leen. Solo update.c la modifica.
-   ---------------------------------------------------------------- */
-
-typedef struct {
-    ESTADO_ACTUAl screen;      /* pantalla activa */
-    InputState input;    /* estado del input */  
-    int level; /*nivel actual*/
-
-    bool running; /* mantiene el juego corriendo */
-    /* Agrega los campos que necesite tu juego */
-} GameState;
-
-/* ================================================================
-   PROTOTIPOS (de funciones). 
-   Concentra los prototipos de todos los archivos .c
-   ================================================================ */
-
-
+SDL_Window *crear_ventana();
 /* ----------------------------------------------------------------
    game.c
    ---------------------------------------------------------------- */
-void game_init(GameState *gs);
 
-
-/* ----------------------------------------------------------------
-   input.c
-   ---------------------------------------------------------------- */
-void input_update(InputState *input);
-
-
-/* ----------------------------------------------------------------
-   update.c
-   ---------------------------------------------------------------- */
-void update(GameState *gs, InputState *input);
-
-
-/*   renderer.c */
-SDL_Window *crear_ventana();
-
-/* ----------------------------------------------------------------
-   ui.c
-   ---------------------------------------------------------------- */
-void render_ui(GameState *gs);
-
+typedef struct {
+SDL_Window *ventana;
+SDL_Renderer *renderizado;
+bool corriendo;
+} eventos_globales;
 
 /* ----------------------------------------------------------------
    assets.c
@@ -97,7 +59,7 @@ void assets_load(void);
 
 /* COMMONS_H */
 void iniciar_componente(bool test, const char *componente);
-
+void Pantalla_Completa(SDL_Window *ventana);
 /* ----------------------------------------------------------------
    entities.c
    ---------------------------------------------------------------- */
@@ -105,4 +67,6 @@ void iniciar_componente(bool test, const char *componente);
 /* void player_jump(GameState *gs);                              */
 /* bool check_collision(float x1, float y1, float x2, float y2); */
 
+ESTADO_ACTUAl menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAl estado_actual);
+ESTADO_ACTUAl juego_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAl estado_actual);
 #endif

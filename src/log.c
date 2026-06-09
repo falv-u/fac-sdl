@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
+#include <time.h>
 #include "log.h"
 #include "commons.h"
 
 static const nivel_log NIVEL_MINIMO = LOG_LEVEL;
+void tiempo_actual();
 
 void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...)
 {
@@ -37,3 +38,7 @@ void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...
 	}
 }
 
+void tiempo_actual()
+{
+
+}

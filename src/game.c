@@ -1,7 +1,7 @@
 #include "commons.h"
 
 
-ESTADO_ACTUAl juego_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_ACTUAl estado_actual, entidad_rec_simple *rec )
+ESTADO_ACTUAL juego_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_ACTUAL estado_actual, entidad_rec_simple *rec )
 {
 
 	if (evento->type == SDL_KEYDOWN )

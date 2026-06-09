@@ -3,15 +3,16 @@
 
 #include <stdbool.h>
 
-#include "SDL_events.h"
-#include "SDL_render.h"
+
 #include "log.h"
 
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
 #include "SDL_video.h"
-
+#include "SDL_events.h"
+#include "SDL_render.h"
+#include <SDL_ttf.h>
 /* Macros */
 #define TARGET_FPS      60
 
@@ -28,12 +29,25 @@ typedef enum {
 	 ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
-typedef struct {
-	SDL_Rect rectangulo;
-} entidad_rec_simple ;
 /* ================================================================
    ESTRUCTURAS
    ================================================================ */
+typedef struct {
+	SDL_Rect rectangulo;
+} entidad_rec_simple ;
+
+typedef struct {
+	/* menu_principal */
+	SDL_Rect jugar;
+	SDL_Rect opciones;
+	SDL_Rect salir;
+	TTF_Font *fuente;
+	//SDL_Surface *surfaceTexto;
+	//SDL_Texture *texturaTexto;
+	SDL_Color color1;
+	SDL_Color color2;
+	SDL_Color color3;
+} menu_principal_recursos;
 
 /* ----------------------------------------------------------------
    input.c actualiza a través de la variable GameState, update.c lo lee y reacciona.
@@ -64,14 +78,9 @@ void assets_load(void);
 /* COMMONS_H */
 void iniciar_componente(bool test, const char *componente);
 void Pantalla_Completa(SDL_Window *ventana);
-/* ----------------------------------------------------------------
-   entities.c
-   ---------------------------------------------------------------- */
-/* void enemy_update(GameState *gs, int enemy_index);            */
-/* void player_jump(GameState *gs);                              */
-/* bool check_collision(float x1, float y1, float x2, float y2); */
 
-ESTADO_ACTUAL menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual);
+ESTADO_ACTUAL menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL juego_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual, entidad_rec_simple *rec);
 void generar_rectangulo(entidad_rec_simple *rectangulo);
+
 #endif

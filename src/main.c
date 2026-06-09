@@ -5,6 +5,7 @@
 /* headers propios */
 #include "SDL_events.h"
 #include "SDL_keycode.h"
+#include "SDL_ttf.h"
 #include "commons.h"
 #include "log.h"
 
@@ -14,7 +15,8 @@ int main(int argc, char** argv)
 {
 	eventos_globales ev_gl;
 	entidad_rec_simple rec;
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	menu_principal_recursos rec_menu;
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | TTF_Init() ) < 0)
 	{
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
 	} else {
@@ -32,7 +34,21 @@ int main(int argc, char** argv)
 	rec.rectangulo.y = 250;
 	rec.rectangulo.h = 100;
 	rec.rectangulo.w = 100;
+	/* Recursos del menu */
+	rec_menu.fuente = TTF_OpenFont("/home/frani/code/fac-sdl/assets/fonts/Silver.ttf", 32);
 
+	rec_menu.color1.r = 255;
+	rec_menu.color1.g = 255;
+	rec_menu.color1.g = 255;
+
+	rec_menu.color2.r = 70;
+	rec_menu.color2.g = 255;
+	rec_menu.color2.b = 0;
+
+	rec_menu.color3.r = 0;
+	rec_menu.color3.g = 34;
+	rec_menu.color3.b = 255;
+	
    while (ev_gl.corriendo)
 	{
       SDL_Event evento;
@@ -44,7 +60,7 @@ int main(int argc, char** argv)
 			switch (estado_juego)
 				{
 					case ESTADO_MENU:
-						estado_juego=menu_principal(ev_gl, &evento, estado_juego);
+						estado_juego=menu_principal(ev_gl, &evento, estado_juego, &rec_menu);
 						break;
 					case ESTADO_CARGA:
 						break;

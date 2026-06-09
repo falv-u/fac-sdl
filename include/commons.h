@@ -24,6 +24,7 @@ typedef enum {
     ESTADO_MENU,
 	 ESTADO_PAUSA,
 	 ESTADO_CARGA,
+	 ESTADO_SELECT_TIPO_PARTIDA,
     ESTADO_JUEGO,
     ESTADO_GAMEOVER,
 	 ESTADO_SALIR,
@@ -59,6 +60,7 @@ typedef struct {
 } InputState;
 
 
+
 SDL_Window *crear_ventana();
 /* ----------------------------------------------------------------
    game.c
@@ -70,6 +72,11 @@ SDL_Renderer *renderizado;
 bool corriendo;
 } eventos_globales;
 
+typedef struct {
+	bool single_player;
+	bool niveles_aleatorios;
+	int dificultad;
+} tipo_partida;
 /* ----------------------------------------------------------------
    assets.c
    ---------------------------------------------------------------- */

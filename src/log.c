@@ -10,11 +10,10 @@ void tiempo_actual();
 
 void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...)
 {
-	FILE *archivo = fopen("log.txt", "w");
+
 	if (level < NIVEL_MINIMO) {
 		return;
 	}
-
 	switch (level) {
 	case LOG_DEBUG:
 		// Verde
@@ -40,5 +39,7 @@ void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...
 
 void tiempo_actual()
 {
-
+    time_t tiempo_actual;
+    
+    time(&tiempo_actual);
 }

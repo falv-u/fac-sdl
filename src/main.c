@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 	rec.rectangulo.h = 100;
 	rec.rectangulo.w = 100;
 	/* Recursos del menu */
-	rec_menu.fuente = TTF_OpenFont("/home/frani/code/fac-sdl/assets/fonts/Silver.ttf", 32);
+	rec_menu.fuente = TTF_OpenFont("/home/frani/code/fac-sdl/assets/fonts/Silver.ttf", 64);
 
 	rec_menu.color1.r = 255;
 	rec_menu.color1.g = 255;

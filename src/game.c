@@ -18,8 +18,8 @@ ESTADO_ACTUAL juego_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_
 	SDL_SetRenderDrawColor(ev_gl.renderizado, 0, 0, 0, 255); // Negro
 	SDL_RenderClear(ev_gl.renderizado);
 	
-	SDL_SetRenderDrawColor(ev_gl.renderizado, 255, 0, 0, 255); // Rojo
 
+	SDL_SetRenderDrawColor(ev_gl.renderizado, 255, 0, 0, 255); // Rojo
 	SDL_RenderFillRect(ev_gl.renderizado, &rec->rectangulo);
 
 	SDL_RenderPresent(ev_gl.renderizado);

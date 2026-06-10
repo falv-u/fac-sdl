@@ -6,6 +6,7 @@
 #include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_ttf.h"
+#include "SDL_image.h"
 #include "commons.h"
 #include "log.h"
 
@@ -23,6 +24,8 @@ int main(int argc, char** argv)
 
 		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 	}
+
+   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 	ESTADO_ACTUAL estado_juego = ESTADO_MENU;
 	
 	ev_gl.corriendo = true;

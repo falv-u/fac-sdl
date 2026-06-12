@@ -1,4 +1,6 @@
 /build/
+/.xmake/
+/.cache/
 *.o
 *.out
 *.bin

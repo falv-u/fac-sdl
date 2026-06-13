@@ -2,7 +2,6 @@
 #include "SDL_image.h"
 #include "SDL_keycode.h"
 #include "commons.h"
-
 void renderizar_fractales(eventos_globales ev_gl);
 ESTADO_ACTUAL menu_principal(eventos_globales ev_gl, SDL_Event *evento, ESTADO_ACTUAL estado_actual, menu_principal_recursos *rec_menu)
 {

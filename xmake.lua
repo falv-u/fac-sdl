@@ -15,7 +15,7 @@ target("game")
     if is_plat("freebsd") or is_plat("bsd") then
         add_sysincludedirs("/usr/local/include", "/usr/local/include/SDL2")
         add_linkdirs("/usr/local/lib")
-        
+        set_targetdir("freebsd")
         add_links("SDL2", "SDL2_ttf", "SDL2_image")
     end
 
@@ -25,6 +25,8 @@ target("game")
         add_requires("libsdl2_image", {system = true, configs = {sysconfig = {pc = "SDL2_image"}}})
         
         add_packages("libsdl2", "libsdl2_ttf", "libsdl2_image")
+
+        set_targetdir("linux")
     end
 
     if is_plat("linux", "freebsd", "bsd") then

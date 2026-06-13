@@ -1,51 +1,56 @@
 [
 {
   "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/commons.c.o", "src/commons.c"],
-  "file": "src/commons.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/ui.c.o", "src/ui.c"],
-  "file": "src/ui.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/update.c.o", "src/update.c"],
-  "file": "src/update.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/renderer.c.o", "src/renderer.c"],
-  "file": "src/renderer.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/log.c.o", "src/log.c"],
-  "file": "src/log.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/input.c.o", "src/input.c"],
-  "file": "src/input.c"
-},
-{
-  "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/entities.c.o", "src/entities.c"],
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/entities.c.o", "src/entities.c"],
   "file": "src/entities.c"
 },
 {
   "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/game.c.o", "src/game.c"],
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/update.c.o", "src/update.c"],
+  "file": "src/update.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/main.c.o", "src/main.c"],
+  "file": "src/main.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/log.c.o", "src/log.c"],
+  "file": "src/log.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/input.c.o", "src/input.c"],
+  "file": "src/input.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/menu.c.o", "src/menu.c"],
+  "file": "src/menu.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/game.c.o", "src/game.c"],
   "file": "src/game.c"
 },
 {
   "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/assets.c.o", "src/assets.c"],
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/ui.c.o", "src/ui.c"],
+  "file": "src/ui.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/renderer.c.o", "src/renderer.c"],
+  "file": "src/renderer.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/assets.c.o", "src/assets.c"],
   "file": "src/assets.c"
 },
 {
   "directory": "/home/frani/code/fac-sdl",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/SDL2", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/main.c.o", "src/main.c"],
-  "file": "src/main.c"
+  "arguments": ["/usr/bin/clang", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-I", "/usr/local/include", "-I", "/usr/local/include/SDL2", "-Wall", "-Wextra", "-DNDEBUG", "-o", "build/.objs/game/bsd/x86_64/release/src/commons.c.o", "src/commons.c"],
+  "file": "src/commons.c"
 }]

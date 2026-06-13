@@ -1,0 +1,18 @@
+ESTADO_ACTUAL	./include/commons.h	/^} ESTADO_ACTUAL;$/
+InputState	./include/commons.h	/^} InputState;$/
+Mmain	./src/main.c	/^int main(int argc, char** argv)$/
+Pantalla_Completa	./src/commons.c	/^void Pantalla_Completa(SDL_Window *ventana)$/
+crear_ventana	./src/renderer.c	/^SDL_Window *crear_ventana()$/
+end	./src/main.c	/^void end( SDL_Window *ventana) $/
+entidad_rec_simple	./include/commons.h	/^} entidad_rec_simple ;$/
+eventos_globales	./include/commons.h	/^} eventos_globales;$/
+eventos_globales_accionados_simples	./src/main.c	/^void eventos_globales_accionados_simples(eventos_g/
+game_log	./src/log.c	/^void game_log(nivel_log level, const char *mensaje/
+iniciar_componente	./src/commons.c	/^void iniciar_componente(bool test, const char *com/
+juego_principal	./src/game.c	/^ESTADO_ACTUAL juego_principal(eventos_globales ev_/
+menu_principal	./src/menu.c	/^ESTADO_ACTUAL menu_principal(eventos_globales ev_g/
+menu_principal_recursos	./include/commons.h	/^} menu_principal_recursos;$/
+nivel_log	./include/log.h	/^} nivel_log;$/
+renderizar_fractales	./src/menu.c	/^void renderizar_fractales(eventos_globales ev_gl)$/
+tiempo_actual	./src/log.c	/^void tiempo_actual()$/
+tipo_partida	./include/commons.h	/^} tipo_partida;$/

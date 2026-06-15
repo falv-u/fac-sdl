@@ -79,6 +79,8 @@ typedef struct {
 	entidad_rec_simple base;
 	entidad_rec_simple cae;
 	menu_principal_recursos rec_menu;
+	float iris_radius;
+   bool is_iris_fading_out;
 } eventos_globales;
 
 typedef struct {

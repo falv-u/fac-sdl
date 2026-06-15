@@ -1,6 +1,7 @@
 /* Librerias estandar */
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -16,10 +17,8 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 
 
 
-int main(int argc, char** argv)
+int main(void)
 {
-	(void)(argc);
-	(void)(argv);
 	eventos_globales ev_gl;
 	menu_principal_recursos rec_menu;
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | TTF_Init() ) < 0)
@@ -29,12 +28,15 @@ int main(int argc, char** argv)
 
 		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 	}
-
+	
    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
 	ev_gl.estado_juego=ESTADO_MENU;
 	ev_gl.corriendo = true;
 	ev_gl.ventana = crear_ventana();
 	ev_gl.renderizado = SDL_CreateRenderer(ev_gl.ventana, -1, SDL_RENDERER_ACCELERATED);
+	ev_gl.iris_radius = 800.0;
+	ev_gl.is_iris_fading_out = false;
 	SDL_RenderSetLogicalSize(ev_gl.renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 	
 	ev_gl.base.rectangulo.x = 200;
@@ -68,10 +70,15 @@ int main(int argc, char** argv)
       SDL_Event evento;
     	/* DELTA TIME */
 		unsigned int current_time = SDL_GetTicks();
+
 		float delta_time = (current_time - last_frame_time) / 1000.0f;
+
 		last_frame_time = current_time;	
+
 		update(delta_time, &ev_gl);
+
 		unsigned int frame_duration = SDL_GetTicks() - current_time;
+
 		if (frame_duration < FRAME_TARGET_TIME)
 			SDL_Delay(FRAME_TARGET_TIME - frame_duration);
 
@@ -80,9 +87,15 @@ int main(int argc, char** argv)
 			eventos_globales_accionados_simples(&ev_gl, evento);
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
 			{
+
+				if (evento.key.keysym.sym == SDLK_i)
+					ev_gl.is_iris_fading_out = true;
 				if (evento.key.keysym.sym == SDLK_RETURN)
 				{
-					if (ev_gl.estado_juego == ESTADO_MENU) ev_gl.estado_juego = ESTADO_JUEGO;
+					if (ev_gl.estado_juego == ESTADO_MENU) 
+					{
+						ev_gl.estado_juego = ESTADO_JUEGO;
+					}
 				}
 			
 			}

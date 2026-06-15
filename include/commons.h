@@ -2,8 +2,6 @@
 #define COMMONS_H
 
 #include <stdbool.h>
-
-
 #include "log.h"
 
 /* SDL libs */
@@ -19,6 +17,11 @@
 #define LARGO_PANTALLA 720
 #define ANCHO_PANTALLA 1280
 #define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
+#define FPS 30
+#define FRAME_TARGET_TIME (1000/FPS)
+
+extern int last_frame_time;
+
 
 typedef enum {
     ESTADO_MENU,
@@ -67,9 +70,15 @@ SDL_Window *crear_ventana();
    ---------------------------------------------------------------- */
 
 typedef struct {
-SDL_Window *ventana;
-SDL_Renderer *renderizado;
-bool corriendo;
+	SDL_Window *ventana;
+	SDL_Renderer *renderizado;
+	bool corriendo;
+	int last_frame_time;
+	ESTADO_ACTUAL estado_juego;
+
+	entidad_rec_simple base;
+	entidad_rec_simple cae;
+	menu_principal_recursos rec_menu;
 } eventos_globales;
 
 typedef struct {
@@ -86,8 +95,8 @@ void assets_load(void);
 void iniciar_componente(bool test, const char *componente);
 void Pantalla_Completa(SDL_Window *ventana);
 
-ESTADO_ACTUAL menu_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual, menu_principal_recursos *rec_menu);
-ESTADO_ACTUAL juego_principal(eventos_globales, SDL_Event *evento, ESTADO_ACTUAL estado_actual, entidad_rec_simple *rec);
+ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento);
 void generar_rectangulo(entidad_rec_simple *rectangulo);
-
+void update(float delta_time, eventos_globales *ev_gl);
 #endif

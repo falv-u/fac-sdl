@@ -1,7 +1,13 @@
+ANCHO_PANTALLA	./include/commons.h	/^#define ANCHO_PANTALLA 1280$/
+COMMONS_H	./include/commons.h	/^#define COMMONS_H$/
 ESTADO_ACTUAL	./include/commons.h	/^} ESTADO_ACTUAL;$/
 InputState	./include/commons.h	/^} InputState;$/
+LARGO_PANTALLA	./include/commons.h	/^#define LARGO_PANTALLA 720$/
+LOG_H	./include/log.h	/^#define LOG_H$/
+LOG_LEVEL	./include/commons.h	/^#define LOG_LEVEL LOG_DEBUG \/* Maquina de estado /
 Mmain	./src/main.c	/^int main(int argc, char** argv)$/
 Pantalla_Completa	./src/commons.c	/^void Pantalla_Completa(SDL_Window *ventana)$/
+TARGET_FPS	./include/commons.h	/^#define TARGET_FPS      60$/
 crear_ventana	./src/renderer.c	/^SDL_Window *crear_ventana()$/
 end	./src/main.c	/^void end( SDL_Window *ventana) $/
 entidad_rec_simple	./include/commons.h	/^} entidad_rec_simple ;$/

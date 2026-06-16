@@ -1,6 +1,7 @@
 #include "commons.h"
+#include <SDL_image.h>
 
-void update(float dt, eventos_globales *ev_gl)
+void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
 	if (ev_gl->is_iris_fading_out == true)
 	{
@@ -9,10 +10,12 @@ void update(float dt, eventos_globales *ev_gl)
 
 	switch (ev_gl->estado_juego)
 	{
-		case ESTADO_JUEGO:
+		case ESTADO_MENU:
 			break;
 		default:
 			break;
 	
 	}
 }
+
+

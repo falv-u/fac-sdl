@@ -1,39 +1,19 @@
 #include "SDL_events.h"
 #include "SDL_image.h"
 
+#include "SDL_rect.h"
+#include "SDL_render.h"
+#include "SDL_surface.h"
 #include "commons.h"
-#include "log.h"
 
 void renderizar_fractales(eventos_globales ev_gl);
+void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento;
-	/*
-	SDL_RenderPresent(ev_gl->renderizado);
-	if (evento != NULL && evento->type == SDL_KEYDOWN)
-	{
-		if (evento->key.keysym.sym == SDLK_ESCAPE) 
-			return ESTADO_SALIR;
-
-		if (evento->key.keysym.sym == SDLK_RETURN) 
-			return ESTADO_JUEGO;
-	}
-	*/
-	
 	SDL_RenderClear(ev_gl->renderizado);
 
-	SDL_Surface *imagen = IMG_Load("./assets/fondos/puf.png");
-	SDL_Texture *textura_fondo = SDL_CreateTextureFromSurface(ev_gl->renderizado, imagen);
-	SDL_FreeSurface(imagen); 
-
-	SDL_RenderCopy(ev_gl->renderizado, textura_fondo, NULL, NULL);
-
-	SDL_Surface *surfaceTexto = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
-	SDL_Texture *texturaTexto = SDL_CreateTextureFromSurface(ev_gl->renderizado, surfaceTexto);
-	SDL_Rect rectDestino = {100, 100, surfaceTexto->w, surfaceTexto->h };
-	SDL_FreeSurface(surfaceTexto);
-
-	SDL_RenderCopy(ev_gl->renderizado, texturaTexto, NULL, &rectDestino);
+	fondo_menu(ev_gl, rec_menu);
 
 
 	if (ev_gl->is_iris_fading_out)
@@ -58,15 +38,34 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 	}
 
  	/* RECORDAR DESTRUIR TEXTURAS */
+
 	SDL_RenderPresent(ev_gl->renderizado);
-
-	if (textura_fondo != NULL) 
-		SDL_DestroyTexture(textura_fondo);
-	if (texturaTexto != NULL) 
-		SDL_DestroyTexture(texturaTexto);
-
 	return ESTADO_MENU;
 }
 
+void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+{
+	/*
+	SDL_RenderPresent(ev_gl->renderizado);
+	if (evento != NULL && evento->type == SDL_KEYDOWN)
+	{
+		if (evento->key.keysym.sym == SDLK_ESCAPE) 
+			return ESTADO_SALIR;
 
+		if (evento->key.keysym.sym == SDLK_RETURN) 
+			return ESTADO_JUEGO;
+	}
+	*/
+	SDL_Rect src_farol = { 3 * 64, 1 * 64, 64, 64 };
+	SDL_Rect dest_farol = { 300, 450, 64 * 2, 64 * 2 };
+
+	if (rec_menu->sprites) 
+		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_farol, &dest_farol);
+	
+
+	SDL_Rect rectDestino = { 100, 100, rec_menu->titulo_w, rec_menu->titulo_h };
+	if (rec_menu->textura_titulo) 
+		SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &rectDestino);
+	
+}
 

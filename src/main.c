@@ -11,7 +11,7 @@
 #include "log.h"
 
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
-void iniciar_recursos_menu(menu_principal_recursos *rec_menu);
+void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl);
 void iniciar_eventos_globales(eventos_globales *ev_gl);
 void iniciar_componente();
 
@@ -22,7 +22,7 @@ int main(void)
 
 	iniciar_componente();
 	iniciar_eventos_globales(&ev_gl);
-	iniciar_recursos_menu(&rec_menu);
+	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	SDL_RenderSetLogicalSize(ev_gl.renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 	/* Recursos del menu */
@@ -39,7 +39,7 @@ int main(void)
 
 		last_frame_time = current_time;	
 
-		update(delta_time, &ev_gl);
+		update(delta_time, &ev_gl, &rec_menu);
 
 		unsigned int frame_duration = SDL_GetTicks() - current_time;
 
@@ -99,10 +99,10 @@ int main(void)
 }
 
 
-void iniciar_recursos_menu(menu_principal_recursos *rec_menu)
+void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl)
 {
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/Silver.ttf", 64);
-
+	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
 	rec_menu->color1.r = 255;
 	rec_menu->color1.g = 255;
 	rec_menu->color1.g = 255;
@@ -115,6 +115,14 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu)
 	rec_menu->color3.g = 34;
 	rec_menu->color3.b = 255;
 
+	if (rec_menu->fuente) {
+        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
+        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
+        rec_menu->titulo_w = surf->w;
+        rec_menu->titulo_h = surf->h;
+        SDL_FreeSurface(surf);
+    }
+
 }
 
 void iniciar_eventos_globales(eventos_globales *ev_gl)
@@ -125,7 +133,6 @@ void iniciar_eventos_globales(eventos_globales *ev_gl)
 	ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
 	ev_gl->iris_radius = 800.0;
 	ev_gl->is_iris_fading_out = false;
-
 }
 
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento)
@@ -150,14 +157,13 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 
 void iniciar_componente()
 {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | TTF_Init() ) < 0)
-	{
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
-	} else {
-
-		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 	}
-	
-   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-
+	if (TTF_Init() == -1) {
+		game_log(LOG_ERROR, "SDL_ttf error: %s\n", TTF_GetError());
+	}
+	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 }
+

@@ -2,7 +2,6 @@
 #define COMMONS_H
 
 #include <stdbool.h>
-#include "log.h"
 
 /* SDL libs */
 #include <SDL2/SDL.h>
@@ -47,7 +46,7 @@ typedef struct {
     int dest_x, dest_y;// Coordenadas de destino en la pantalla
     int ancho, alto;   // Tamaño del bloque  64x64
     int escala;        // Factor de escalado
-} DecoracionMenu;
+} ElementosMenu;
 
 typedef struct {
 	/* menu_principal */
@@ -56,13 +55,9 @@ typedef struct {
 	SDL_Rect salir;
 	TTF_Font *fuente;
 
-	SDL_Texture *domo;
-	SDL_Texture *camino;
-	SDL_Texture *edificios;
-	
-	SDL_Texture *arbol;
-	SDL_Texture *farol;
-	SDL_Texture *coche;
+	SDL_Texture* textura_titulo;
+   int titulo_w, titulo_h;
+	SDL_Texture *sprites;
 
 	float scroll_camino;
    float scroll_edificios;
@@ -75,7 +70,7 @@ typedef struct {
 	SDL_Color color2;
 	SDL_Color color3;
 
-	DecoracionMenu elementos[2];
+	ElementosMenu elementos[3];
 } menu_principal_recursos;
 
 typedef struct {
@@ -97,6 +92,7 @@ typedef struct {
 	menu_principal_recursos rec_menu;
 	float iris_radius;
    bool is_iris_fading_out;
+	
 } eventos_globales;
 
 typedef struct {
@@ -111,6 +107,6 @@ void Pantalla_Completa(SDL_Window *ventana);
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento);
 void generar_rectangulo(entidad_rec_simple *rectangulo);
-void update(float delta_time, eventos_globales *ev_gl);
+void update(float delta_time, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL seleccionar_niveles(void);
 #endif

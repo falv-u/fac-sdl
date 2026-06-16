@@ -11,6 +11,7 @@
 #include "SDL_events.h"
 #include "SDL_render.h"
 #include <SDL_ttf.h>
+#include <SDL_audio.h>
 /* Macros */
 #define TARGET_FPS      60
 

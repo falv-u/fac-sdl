@@ -15,8 +15,6 @@
 void end(SDL_Window *ventana);
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
 
-
-
 int main(void)
 {
 	eventos_globales ev_gl;

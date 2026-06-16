@@ -1,10 +1,13 @@
 #include "SDL_events.h"
 #include "SDL_image.h"
-#include "SDL_keycode.h"
+
 #include "commons.h"
+#include "log.h"
+
 void renderizar_fractales(eventos_globales ev_gl);
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
+	(void)evento;
 	/*
 	SDL_RenderPresent(ev_gl->renderizado);
 	if (evento != NULL && evento->type == SDL_KEYDOWN)
@@ -16,17 +19,14 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 			return ESTADO_JUEGO;
 	}
 	*/
-
-
-	SDL_RenderPresent(ev_gl->renderizado);
+	
 	SDL_RenderClear(ev_gl->renderizado);
 
-	SDL_Surface *imagen = IMG_Load("/home/frani/code/fac-sdl/assets/fondos/puf.png");
-	SDL_Texture* textura_fondo = SDL_CreateTextureFromSurface(ev_gl->renderizado, imagen);
+	SDL_Surface *imagen = IMG_Load("./assets/fondos/puf.png");
+	SDL_Texture *textura_fondo = SDL_CreateTextureFromSurface(ev_gl->renderizado, imagen);
 	SDL_FreeSurface(imagen); 
 
 	SDL_RenderCopy(ev_gl->renderizado, textura_fondo, NULL, NULL);
-	SDL_DestroyTexture(textura_fondo); // Destrucción obligatoria que faltaba
 
 	SDL_Surface *surfaceTexto = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
 	SDL_Texture *texturaTexto = SDL_CreateTextureFromSurface(ev_gl->renderizado, surfaceTexto);
@@ -34,7 +34,6 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 	SDL_FreeSurface(surfaceTexto);
 
 	SDL_RenderCopy(ev_gl->renderizado, texturaTexto, NULL, &rectDestino);
-	SDL_DestroyTexture(texturaTexto);
 
 
 	if (ev_gl->is_iris_fading_out)
@@ -58,13 +57,16 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 		SDL_RenderFillRect(ev_gl->renderizado, &right);
 	}
 
+ 	/* RECORDAR DESTRUIR TEXTURAS */
 	SDL_RenderPresent(ev_gl->renderizado);
+
+	if (textura_fondo != NULL) 
+		SDL_DestroyTexture(textura_fondo);
+	if (texturaTexto != NULL) 
+		SDL_DestroyTexture(texturaTexto);
+
 	return ESTADO_MENU;
 }
 
 
-void renderizar_fractales(eventos_globales ev_gl)
-{
-
-}
 

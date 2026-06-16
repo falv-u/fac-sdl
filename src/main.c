@@ -1,7 +1,5 @@
 /* Librerias estandar */
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -12,56 +10,23 @@
 #include "commons.h"
 #include "log.h"
 
-void end(SDL_Window *ventana);
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
+void iniciar_recursos_menu(menu_principal_recursos *rec_menu);
+void iniciar_eventos_globales(eventos_globales *ev_gl);
+void iniciar_componente();
 
 int main(void)
 {
 	eventos_globales ev_gl;
 	menu_principal_recursos rec_menu;
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | TTF_Init() ) < 0)
-	{
-		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
-	} else {
 
-		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
-	}
-	
-   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+	iniciar_componente();
+	iniciar_eventos_globales(&ev_gl);
+	iniciar_recursos_menu(&rec_menu);
 
-	ev_gl.estado_juego=ESTADO_MENU;
-	ev_gl.corriendo = true;
-	ev_gl.ventana = crear_ventana();
-	ev_gl.renderizado = SDL_CreateRenderer(ev_gl.ventana, -1, SDL_RENDERER_ACCELERATED);
-	ev_gl.iris_radius = 800.0;
-	ev_gl.is_iris_fading_out = false;
 	SDL_RenderSetLogicalSize(ev_gl.renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
-	
-	ev_gl.base.rectangulo.x = 200;
-	ev_gl.base.rectangulo.y = 600;
-	ev_gl.base.rectangulo.h = 50;
-	ev_gl.base.rectangulo.w = 100;
-	
-	ev_gl.cae.rectangulo.x = 200;
-	ev_gl.cae.rectangulo.y = 10;
-	ev_gl.cae.rectangulo.h = 100;
-	ev_gl.cae.rectangulo.w = 50;
-	
 	/* Recursos del menu */
-	rec_menu.fuente = TTF_OpenFont("/home/frani/code/fac-sdl/assets/fonts/Silver.ttf", 64);
-
-	rec_menu.color1.r = 255;
-	rec_menu.color1.g = 255;
-	rec_menu.color1.g = 255;
-
-	rec_menu.color2.r = 70;
-	rec_menu.color2.g = 255;
-	rec_menu.color2.b = 0;
-
-	rec_menu.color3.r = 0;
-	rec_menu.color3.g = 34;
-	rec_menu.color3.b = 255;
-	
+		
 	unsigned int last_frame_time = SDL_GetTicks();
 
 	while (ev_gl.corriendo)
@@ -84,17 +49,17 @@ int main(void)
       while (SDL_PollEvent(&evento))
 		{
 			eventos_globales_accionados_simples(&ev_gl, evento);
+
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
 			{
 
 				if (evento.key.keysym.sym == SDLK_i)
 					ev_gl.is_iris_fading_out = true;
+
 				if (evento.key.keysym.sym == SDLK_RETURN)
 				{
 					if (ev_gl.estado_juego == ESTADO_MENU) 
-					{
 						ev_gl.estado_juego = ESTADO_SELECT_NIVELES;
-					}
 				}
 			
 			}
@@ -127,16 +92,41 @@ int main(void)
 			}
 
 	}
-	end(ev_gl.ventana);
+
+	SDL_DestroyWindow(ev_gl.ventana);
+	SDL_Quit();
 	return 0;
 }
 
-void end( SDL_Window *ventana) 
+
+void iniciar_recursos_menu(menu_principal_recursos *rec_menu)
 {
-	SDL_DestroyWindow(ventana);
-	SDL_Quit();
+	rec_menu->fuente = TTF_OpenFont("./assets/fonts/Silver.ttf", 64);
+
+	rec_menu->color1.r = 255;
+	rec_menu->color1.g = 255;
+	rec_menu->color1.g = 255;
+
+	rec_menu->color2.r = 70;
+	rec_menu->color2.g = 255;
+	rec_menu->color2.b = 0;
+
+	rec_menu->color3.r = 0;
+	rec_menu->color3.g = 34;
+	rec_menu->color3.b = 255;
+
 }
 
+void iniciar_eventos_globales(eventos_globales *ev_gl)
+{
+	ev_gl->estado_juego=ESTADO_MENU;
+	ev_gl->corriendo = true;
+	ev_gl->ventana = crear_ventana();
+	ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
+	ev_gl->iris_radius = 800.0;
+	ev_gl->is_iris_fading_out = false;
+
+}
 
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento)
 {
@@ -155,5 +145,19 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 			ev_gl->corriendo = false;
 		}
 	}
+
+}
+
+void iniciar_componente()
+{
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | TTF_Init() ) < 0)
+	{
+		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
+	} else {
+
+		game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
+	}
+	
+   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
 }

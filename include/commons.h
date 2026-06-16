@@ -21,6 +21,9 @@
 #define FPS 30
 #define FRAME_TARGET_TIME (1000/FPS)
 
+
+#define TILE_64 64
+
 extern int last_frame_time;
 
 
@@ -35,12 +38,16 @@ typedef enum {
 	 ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
-/* ================================================================
-   ESTRUCTURAS
-   ================================================================ */
 typedef struct {
 	SDL_Rect rectangulo;
 } entidad_rec_simple ;
+
+typedef struct {
+    int src_x, src_y;  // Coordenadas de origen 1024x1024
+    int dest_x, dest_y;// Coordenadas de destino en la pantalla
+    int ancho, alto;   // Tamaño del bloque  64x64
+    int escala;        // Factor de escalado
+} DecoracionMenu;
 
 typedef struct {
 	/* menu_principal */
@@ -52,6 +59,9 @@ typedef struct {
 	SDL_Texture *domo;
 	SDL_Texture *camino;
 	SDL_Texture *edificios;
+	
+	SDL_Texture *arbol;
+	SDL_Texture *farol;
 	SDL_Texture *coche;
 
 	float scroll_camino;
@@ -59,29 +69,23 @@ typedef struct {
     
    float vel_camino;
    float vel_edificios;
-
 	//SDL_Surface *surfaceTexto;
 	//SDL_Texture *texturaTexto;
 	SDL_Color color1;
 	SDL_Color color2;
 	SDL_Color color3;
+
+	DecoracionMenu elementos[2];
 } menu_principal_recursos;
 
-/* ----------------------------------------------------------------
-   input.c actualiza a través de la variable GameState, update.c lo lee y reacciona.
-   ---------------------------------------------------------------- */
 typedef struct {
     bool keyUp;
     bool keyDown;
-    // Puedes agregar más teclas o combinaciones de teclas
 } InputState;
 
 
 
 SDL_Window *crear_ventana();
-/* ----------------------------------------------------------------
-   game.c
-   ---------------------------------------------------------------- */
 
 typedef struct {
 	SDL_Window *ventana;
@@ -90,8 +94,6 @@ typedef struct {
 	int last_frame_time;
 	ESTADO_ACTUAL estado_juego;
 
-	entidad_rec_simple base;
-	entidad_rec_simple cae;
 	menu_principal_recursos rec_menu;
 	float iris_radius;
    bool is_iris_fading_out;
@@ -102,13 +104,8 @@ typedef struct {
 	bool niveles_aleatorios;
 	int dificultad;
 } tipo_partida;
-/* ----------------------------------------------------------------
-   assets.c
-   ---------------------------------------------------------------- */
 void assets_load(void);
 
-/* COMMONS_H */
-void iniciar_componente(bool test, const char *componente);
 void Pantalla_Completa(SDL_Window *ventana);
 
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);

@@ -25,8 +25,8 @@ void listar_niveles()
 	char time_srt[64];
 	int total_files =0;
 	FILE *archivo_salida;
-	const char *carpeta_niveles = "/home/frani/code/fac-sdl/niveles/";
-	const char *ruta_archivo_salida = "/home/frani/code/fac-sdl/niveles_db.cvs";
+	const char *carpeta_niveles = "./niveles/";
+	const char *ruta_archivo_salida = "./niveles_db.txt";
 
 	int numero_nivel = -1;
 
@@ -42,7 +42,7 @@ void listar_niveles()
 	if (dir == NULL)
 	{
 		game_log(LOG_ERROR, "CARPETA NO ENCONTRADA!", NULL);
-		fclose(archivo_salida); // <-- CORRECCIÓN OBLIGATORIA
+		fclose(archivo_salida); 
 		return;
 	}
 
@@ -57,17 +57,14 @@ void listar_niveles()
 		if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name,  "..") == 0) 
 			continue;
 
-		// Si el archivo no coincide con el patrón "nivel[NÚMERO]", sscanf devuelve 0 y se ignora.
 		if (sscanf(entry->d_name, "nivel%d", &numero_nivel) == 1)
 		{
 			snprintf(ruta_completa, sizeof(ruta_completa), "%s%s", carpeta_niveles, entry->d_name);
 
 			if (stat(ruta_completa, &file_stat) == 0)
 				{
-				// Traducir la fecha de modificación
 				strftime(time_srt, sizeof(time_srt), "%d-%m-%Y %H:%M", localtime(&file_stat.st_mtime));
 
-				// Escribir en el CSV: Número y Ruta por separado, seguidos de los datos físicos
 				fprintf(archivo_salida, "%d;%s;%s\n", numero_nivel, ruta_completa, time_srt);
 
 				printf("%-7d %-50s %-12ld %-16s\n", numero_nivel, ruta_completa, (long)file_stat.st_size, time_srt);
@@ -76,7 +73,6 @@ void listar_niveles()
       }
     }
 
-    // 3. Cerrar descriptores de forma segura
     closedir(dir);
     fclose(archivo_salida); 
     

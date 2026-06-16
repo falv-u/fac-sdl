@@ -48,6 +48,7 @@ int main(void)
 	ev_gl.cae.rectangulo.y = 10;
 	ev_gl.cae.rectangulo.h = 100;
 	ev_gl.cae.rectangulo.w = 50;
+	
 	/* Recursos del menu */
 	rec_menu.fuente = TTF_OpenFont("/home/frani/code/fac-sdl/assets/fonts/Silver.ttf", 64);
 
@@ -94,7 +95,7 @@ int main(void)
 				{
 					if (ev_gl.estado_juego == ESTADO_MENU) 
 					{
-						ev_gl.estado_juego = ESTADO_JUEGO;
+						ev_gl.estado_juego = ESTADO_SELECT_NIVELES;
 					}
 				}
 			
@@ -108,6 +109,11 @@ int main(void)
 				case ESTADO_CARGA:
 					break;
 				case ESTADO_PAUSA:
+					break;
+				case ESTADO_SELECT_TIPO_PARTIDA:
+					break;
+				case ESTADO_SELECT_NIVELES:
+					ev_gl.estado_juego=seleccionar_niveles();
 					break;
 				case ESTADO_JUEGO:
 					ev_gl.estado_juego=juego_principal(&ev_gl, &evento);

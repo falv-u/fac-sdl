@@ -6,6 +6,7 @@
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
+#include "SDL_rect.h"
 #include "SDL_video.h"
 #include "SDL_events.h"
 #include "SDL_render.h"
@@ -20,6 +21,7 @@
 #define FPS 30
 #define FRAME_TARGET_TIME (1000/FPS)
 
+#define ESCALADO_1 3
 
 #define TILE_64 64
 
@@ -63,6 +65,7 @@ typedef struct {
    float scroll_edificios;
     
    float vel_camino;
+
    float vel_edificios;
 	//SDL_Surface *surfaceTexto;
 	//SDL_Texture *texturaTexto;
@@ -78,7 +81,29 @@ typedef struct {
     bool keyDown;
 } InputState;
 
+typedef enum {
+    NOTA_SIMPLE,
+    NOTA_LARGA
+} TIPO_NOTA;
 
+typedef enum {
+    NOTA_ESPERANDO,   /* sigue bajando */
+    NOTA_MANTENIDA,   /* el jugador continua presionando */
+    NOTA_GOLPEADA,    /* acertada */
+    NOTA_FALLADA      /* pasa de largo */
+} ESTADO_NOTA;
+
+typedef struct {
+    TIPO_NOTA tipo;
+	 ESTADO_NOTA estado;
+    SDL_Rect hitbox; 
+    int carril;       
+} Nota;
+
+typedef struct {
+    Nota *notas;
+    int total_notas;
+} MapaCancion;
 
 SDL_Window *crear_ventana();
 
@@ -88,6 +113,9 @@ typedef struct {
 	bool corriendo;
 	int last_frame_time;
 	ESTADO_ACTUAL estado_juego;
+
+	float tiempo_juego;
+	int indice_nota_actual;
 
 	menu_principal_recursos rec_menu;
 	float iris_radius;

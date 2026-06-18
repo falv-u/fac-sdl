@@ -11,6 +11,10 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 	switch (ev_gl->estado_juego)
 	{
 		case ESTADO_MENU:
+			rec_menu->scroll_edificios -= rec_menu->vel_edificios * dt;
+
+			if (rec_menu->scroll_edificios <= -(8*64*ESCALADO_1)) 
+				rec_menu->scroll_edificios += (8*64*ESCALADO_1); 
 			break;
 		default:
 			break;
@@ -18,4 +22,8 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 	}
 }
 
+void actualizar_notas(float dt, eventos_globales *ev_gl, Nota *mapa, int total_notas)
+{
+    ev_gl->tiempo_juego += dt;
 
+}

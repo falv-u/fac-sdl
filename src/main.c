@@ -123,6 +123,9 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
         SDL_FreeSurface(surf);
     }
 
+	rec_menu->scroll_edificios = 0.0f;
+   rec_menu->vel_edificios = 300.0f;
+
 }
 
 void iniciar_eventos_globales(eventos_globales *ev_gl)

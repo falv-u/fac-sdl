@@ -10,60 +10,35 @@
 #include "commons.h"
 #include "log.h"
 
-void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
+void iniciar_componente();
 void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl);
 void iniciar_eventos_globales(eventos_globales *ev_gl);
-void iniciar_componente();
+void manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
+
+void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
+void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento);
 
 int main(void)
 {
 	eventos_globales ev_gl;
 	menu_principal_recursos rec_menu;
+	
+	float delta_time=0;
+	unsigned int last_frame_time = SDL_GetTicks();
 
 	iniciar_componente();
-	iniciar_eventos_globales(&ev_gl);
+	iniciar_eventos_globales(&ev_gl); /* la ventana tambien se crea aqui al estar anclada a los eventos globales como cerrar */
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
-
-	SDL_RenderSetLogicalSize(ev_gl.renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
-	/* Recursos del menu */
-		
-	unsigned int last_frame_time = SDL_GetTicks();
 
 	while (ev_gl.corriendo)
 	{
       SDL_Event evento;
-    	/* DELTA TIME */
-		unsigned int current_time = SDL_GetTicks();
 
-		float delta_time = (current_time - last_frame_time) / 1000.0f;
-
-		last_frame_time = current_time;	
-
-		update(delta_time, &ev_gl, &rec_menu);
-
-		unsigned int frame_duration = SDL_GetTicks() - current_time;
-
-		if (frame_duration < FRAME_TARGET_TIME)
-			SDL_Delay(FRAME_TARGET_TIME - frame_duration);
-
-      while (SDL_PollEvent(&evento))
-		{
-			eventos_globales_accionados_simples(&ev_gl, evento);
-
-			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
-			{
-
-				if (evento.key.keysym.sym == SDLK_i)
-					ev_gl.is_iris_fading_out = true;
-
-				if (evento.key.keysym.sym == SDLK_RETURN)
-				{
-					if (ev_gl.estado_juego == ESTADO_MENU) 
-						ev_gl.estado_juego = ESTADO_SELECT_NIVELES;
-				}
-			
-			}
-		}
+		manejo_delta_time(&delta_time, &last_frame_time);
+		update(delta_time, &ev_gl,  &rec_menu);
+		
+		eventos_accionados_usuario(&ev_gl, evento);
+      
 		switch (ev_gl.estado_juego)
 			{
 				case ESTADO_MENU:
@@ -105,7 +80,7 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
 	rec_menu->color1.r = 255;
 	rec_menu->color1.g = 255;
-	rec_menu->color1.g = 255;
+	rec_menu->color1.b = 255;
 
 	rec_menu->color2.r = 70;
 	rec_menu->color2.g = 255;
@@ -130,12 +105,15 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 
 void iniciar_eventos_globales(eventos_globales *ev_gl)
 {
+
 	ev_gl->estado_juego=ESTADO_MENU;
 	ev_gl->corriendo = true;
 	ev_gl->ventana = crear_ventana();
 	ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
 	ev_gl->iris_radius = 800.0;
 	ev_gl->is_iris_fading_out = false;
+	SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
+
 }
 
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento)
@@ -160,13 +138,55 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 
 void iniciar_componente()
 {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) 
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
-	}
-	if (TTF_Init() == -1) {
+	
+	if (TTF_Init() == -1) 
 		game_log(LOG_ERROR, "SDL_ttf error: %s\n", TTF_GetError());
-	}
+
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
+}
+
+void manejo_delta_time(float *delta_time, unsigned int *last_frame_time)
+{
+
+	unsigned int current_time = SDL_GetTicks();
+
+	*delta_time = (current_time - *last_frame_time) / 1000.0f;
+
+	*last_frame_time = SDL_GetTicks();
+
+	if (*delta_time > 0.1f) *delta_time = 0.1f;
+
+	*last_frame_time = current_time;	
+
+	unsigned int frame_duration = SDL_GetTicks() - current_time;
+	if (frame_duration < FRAME_TARGET_TIME)
+		SDL_Delay(FRAME_TARGET_TIME - frame_duration);
+}
+
+void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento)
+{
+	while (SDL_PollEvent(&evento))
+		{
+
+			eventos_globales_accionados_simples(ev_gl, evento);
+			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
+			{
+
+				if (evento.key.keysym.sym == SDLK_i)
+					ev_gl->is_iris_fading_out = true;
+
+				if (evento.key.keysym.sym == SDLK_RETURN)
+				{
+					if (ev_gl->estado_juego == ESTADO_MENU) 
+						ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
+				}
+			
+			}
+		}
+
 }
 

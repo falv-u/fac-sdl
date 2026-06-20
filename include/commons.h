@@ -14,6 +14,7 @@
 #include <SDL_audio.h>
 
 /* Libs propias */
+/*(ninguna por ahora)*/
 
 /* Macros */
 
@@ -115,7 +116,8 @@ typedef enum {
     NOTA_GOLPEADA,    /* acertada */
     NOTA_FALLADA      /* pasa de largo */
 } ESTADO_NOTA;
-/*
+
+/* TODO: carriles de notas
 typedef enum {
 } carriles;
 */
@@ -137,6 +139,7 @@ typedef struct {
 	int dificultad;
 } tipo_partida;
 
+/* ---------------------------------------------- */
 
 /* primitivas */
 

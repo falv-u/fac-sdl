@@ -11,7 +11,6 @@
 void listar_niveles();
 ESTADO_ACTUAL seleccionar_niveles()
 {
-	int nivel=0;
 	listar_niveles();
 	return ESTADO_SALIR;
 }
@@ -23,7 +22,7 @@ void listar_niveles()
 	struct stat file_stat;
 	char ruta_completa[512];
 	char time_srt[64];
-	int total_files =0;
+	int total_files = 0;
 	FILE *archivo_salida;
 	const char *carpeta_niveles = "./niveles/";
 	const char *ruta_archivo_salida = "./niveles_db.txt";
@@ -62,7 +61,7 @@ void listar_niveles()
 			snprintf(ruta_completa, sizeof(ruta_completa), "%s%s", carpeta_niveles, entry->d_name);
 
 			if (stat(ruta_completa, &file_stat) == 0)
-				{
+			{
 				strftime(time_srt, sizeof(time_srt), "%d-%m-%Y %H:%M", localtime(&file_stat.st_mtime));
 
 				fprintf(archivo_salida, "%d;%s;%s\n", numero_nivel, ruta_completa, time_srt);
@@ -71,6 +70,8 @@ void listar_niveles()
 
 			}
       }
+
+		total_files++;
     }
 
     closedir(dir);

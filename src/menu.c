@@ -1,69 +1,46 @@
 #include "SDL_events.h"
-#include "SDL_image.h"
-
 #include "SDL_rect.h"
 #include "SDL_render.h"
-#include "SDL_surface.h"
+
 #include "commons.h"
+#include <math.h>
 
 void renderizar_fractales(eventos_globales ev_gl);
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
-void update_notas(float dt, MapaCancion *mapa, float velocidad_caida);
-void procesar_input_carril(MapaCancion *mapa, int carril_presionado, SDL_Rect *hitbox_juez);
+void fade_iris_out(eventos_globales *ev_gl);
+
+void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
-	(void)evento;
-	SDL_RenderClear(ev_gl->renderizado);
+	(void)evento; /* para eliminar warning, no relevante */
 
+	SDL_RenderClear(ev_gl->renderizado);
+	
+	pintar_gradiente_noche_menu(ev_gl->renderizado);
 	fondo_menu(ev_gl, rec_menu);
 
 
 	if (ev_gl->is_iris_fading_out)
-	{
-		SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
-
-		int w = ANCHO_PANTALLA;
-		int h = LARGO_PANTALLA;
-		float r = ev_gl->iris_radius;
-		int cx = w / 2;
-		int cy = h / 2;
-
-		SDL_Rect top    = {0, 0, w, cy - (int)r};
-		SDL_Rect bottom = {0, cy + (int)r, w, h - (cy + (int)r)};
-		SDL_Rect left   = {0, cy - (int)r, cx - (int)r, (int)r * 2};
-		SDL_Rect right  = {cx + (int)r, cy - (int)r, w - (cx + (int)r), (int)r * 2};
-
-		SDL_RenderFillRect(ev_gl->renderizado, &top);
-		SDL_RenderFillRect(ev_gl->renderizado, &bottom);
-		SDL_RenderFillRect(ev_gl->renderizado, &left);
-		SDL_RenderFillRect(ev_gl->renderizado, &right);
-	}
+		fade_iris_out(ev_gl);
 
  	/* RECORDAR DESTRUIR TEXTURAS */
-
 	SDL_RenderPresent(ev_gl->renderizado);
 	return ESTADO_MENU;
 }
 
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
-	/*
-	SDL_RenderPresent(ev_gl->renderizado);
-	if (evento != NULL && evento->type == SDL_KEYDOWN)
-	{
-		if (evento->key.keysym.sym == SDLK_ESCAPE) 
-			return ESTADO_SALIR;
 
-		if (evento->key.keysym.sym == SDLK_RETURN) 
-			return ESTADO_JUEGO;
-	}
-	*/
+	int ancho_final=64*8*ESCALADO_1;
+	int alto_final=64*ESCALADO_1;
+
 
 	if (rec_menu->sprites) 
 	{
-		int ancho_final=64*8*ESCALADO_1;
-		int alto_final=64*ESCALADO_1;
+		SDL_Rect src_moon = {14*64, 0*64, 64*2, 64*2};
+		SDL_Rect dest_moon = {100, 100, 64*2, 64*2};
+		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_moon, &dest_moon);
 
 		SDL_Rect src_arboleda = { 4*64, 0*64, (64*8), 64 };
 		SDL_Rect dest_arboleda_0;
@@ -94,43 +71,64 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 		SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &rectDestino);
 	
 }
-
-void update_notas(float dt, MapaCancion *mapa, float velocidad_caida)
+void fade_iris_out(eventos_globales *ev_gl)
 {
-	for (int i = 0; i < mapa->total_notas; i++)
-	{
-		Nota *n = &mapa->notas[i];
+	SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
 
-		if (n->estado == NOTA_ESPERANDO || n->estado == NOTA_MANTENIDA)
-		{
-			n->hitbox.y += (int)(velocidad_caida * dt);
-		}
+	int w = ANCHO_PANTALLA;
+	int h = LARGO_PANTALLA;
+	float r = ev_gl->iris_radius;
+	int cx = w / 2;
+	int cy = h / 2;
 
-		if (n->hitbox.y > LARGO_PANTALLA && n->estado != NOTA_GOLPEADA)
-		{
-			n->estado = NOTA_FALLADA;
-		}
-	}
+	SDL_Rect top    = {0, 0, w, cy - (int)r};
+	SDL_Rect bottom = {0, cy + (int)r, w, h - (cy + (int)r)};
+	SDL_Rect left   = {0, cy - (int)r, cx - (int)r, (int)r * 2};
+	SDL_Rect right  = {cx + (int)r, cy - (int)r, w - (cx + (int)r), (int)r * 2};
+
+	SDL_RenderFillRect(ev_gl->renderizado, &top);
+	SDL_RenderFillRect(ev_gl->renderizado, &bottom);
+	SDL_RenderFillRect(ev_gl->renderizado, &left);
+	SDL_RenderFillRect(ev_gl->renderizado, &right);
 }
 
-void procesar_input_carril(MapaCancion *mapa, int carril_presionado, SDL_Rect *hitbox_juez)
+void pintar_gradiente_noche_menu(SDL_Renderer *render)
 {
-	for (int i = 0; i < mapa->total_notas; i++)
-	{
-		Nota *n = &mapa->notas[i];
+	SDL_Color color_cenit = {5, 10, 35, 255};   /* Azul noche superior */
+	SDL_Color color_horizonte = {0, 0, 5, 255}; /* horizonte inferior */
 
-		if (n->carril == carril_presionado && n->estado == NOTA_ESPERANDO)
-		{
-			if (SDL_HasIntersection(&n->hitbox, hitbox_juez))
-			{
-				if (n->tipo == NOTA_SIMPLE) 
-				{
-					n->estado = NOTA_GOLPEADA; 
-				} else if (n->tipo == NOTA_LARGA) {
-					n->estado = NOTA_MANTENIDA; 
-				}
-				break; 
-			}
-		}
-	}
+	SDL_Vertex vertices[4];
+
+	/* Arriba Izquierda */
+	vertices[0].position.x = 0.0f;
+	vertices[0].position.y = 0.0f;
+	vertices[0].color = color_cenit;
+	vertices[0].tex_coord.x = 0.0f;
+	vertices[0].tex_coord.y = 0.0f;
+
+	/* Arriba Derecha */
+	vertices[1].position.x = (float)ANCHO_PANTALLA;
+	vertices[1].position.y = 0.0f;
+	vertices[1].color = color_cenit;
+	vertices[1].tex_coord.x = 1.0f;
+	vertices[1].tex_coord.y = 0.0f;
+
+	/* Abajo Derecha */
+	vertices[2].position.x = (float)ANCHO_PANTALLA;
+	vertices[2].position.y = (float)LARGO_PANTALLA;
+	vertices[2].color = color_horizonte;
+	vertices[2].tex_coord.x = 1.0f;
+	vertices[2].tex_coord.y = 1.0f;
+
+	/* Abajo Izquierda */
+	vertices[3].position.x = 0.0f;
+	vertices[3].position.y = (float)LARGO_PANTALLA;
+	vertices[3].color = color_horizonte;
+	vertices[3].tex_coord.x = 0.0f;
+	vertices[3].tex_coord.y = 1.0f;
+
+	int indices[6] = {0, 1, 2, 0, 2, 3};
+
+	/* Renderizado de geometría sin textura (NULL) para usar solo color */
+	SDL_RenderGeometry(render, NULL, vertices, 4, indices, 6);
 }

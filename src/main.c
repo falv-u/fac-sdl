@@ -36,8 +36,9 @@ int main(void)
 
 		manejo_delta_time(&delta_time, &last_frame_time);
 		update(delta_time, &ev_gl,  &rec_menu);
-		
-		eventos_accionados_usuario(&ev_gl, evento);
+
+		/* ignorar warning ya que se declara al incio de la funcion para los eventos de usuario */ 
+		eventos_accionados_usuario(&ev_gl, evento); 
       
 		switch (ev_gl.estado_juego)
 			{
@@ -76,8 +77,10 @@ int main(void)
 
 void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl)
 {
+
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/Silver.ttf", 64);
 	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
+
 	rec_menu->color1.r = 255;
 	rec_menu->color1.g = 255;
 	rec_menu->color1.b = 255;
@@ -90,13 +93,14 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->color3.g = 34;
 	rec_menu->color3.b = 255;
 
-	if (rec_menu->fuente) {
+	if (rec_menu->fuente) 
+	{
         SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
         rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
         rec_menu->titulo_w = surf->w;
         rec_menu->titulo_h = surf->h;
         SDL_FreeSurface(surf);
-    }
+   }
 
 	rec_menu->scroll_edificios = 0.0f;
    rec_menu->vel_edificios = 300.0f;
@@ -151,7 +155,6 @@ void iniciar_componente()
 
 void manejo_delta_time(float *delta_time, unsigned int *last_frame_time)
 {
-
 	unsigned int current_time = SDL_GetTicks();
 
 	*delta_time = (current_time - *last_frame_time) / 1000.0f;
@@ -189,4 +192,5 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento)
 		}
 
 }
+
 

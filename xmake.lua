@@ -16,7 +16,7 @@ target("game")
         add_sysincludedirs("/usr/local/include", "/usr/local/include/SDL2")
         add_linkdirs("/usr/local/lib")
         set_targetdir("freebsd")
-        add_links("SDL2", "SDL2_ttf", "SDL2_image")
+        add_links("SDL2", "SDL2_ttf", "SDL2_image", "SDL2_mixer")
     end
 
     if is_plat("linux") then

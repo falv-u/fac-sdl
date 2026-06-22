@@ -6,6 +6,7 @@
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
+#include "SDL_mixer.h"
 #include "SDL_rect.h"
 #include "SDL_video.h"
 #include "SDL_events.h"
@@ -68,7 +69,9 @@ typedef struct {
 	SDL_Color color1;
 	SDL_Color color2;
 	SDL_Color color3;
-
+	
+	Mix_Music *musica_fondo;
+	Mix_Chunk *sfx_opcion;
 	int opcion;
 } menu_principal_recursos;
 

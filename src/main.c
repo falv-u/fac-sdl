@@ -7,6 +7,7 @@
 #include "SDL_keycode.h"
 #include "SDL_ttf.h"
 #include "SDL_image.h"
+#include "SDL_mixer.h"
 #include "commons.h"
 #include "log.h"
 
@@ -71,6 +72,11 @@ int main(void)
 	}
 
 	SDL_DestroyWindow(ev_gl.ventana);
+	Mix_HaltMusic();
+	Mix_FreeMusic(rec_menu.musica_fondo);
+
+	Mix_CloseAudio();
+	Mix_Quit();
 	SDL_Quit();
 	return 0;
 }
@@ -78,7 +84,7 @@ int main(void)
 
 void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl)
 {
-	rec_menu->opcion=1;
+	rec_menu->opcion=0;
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/Silver.ttf", 64);
 	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
 
@@ -94,8 +100,9 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->color3.g = 34;
 	rec_menu->color3.b = 255;
 	
-	
-	
+	rec_menu->musica_fondo= Mix_LoadMUS("./assets/music/song68.ogg");
+	rec_menu->sfx_opcion = Mix_LoadWAV("./assets/sfx/undertale-select-sound.wav");
+
 	if (rec_menu->fuente) 
 	{
         SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
@@ -108,6 +115,8 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->scroll_edificios = 0.0f;
    rec_menu->vel_edificios = 300.0f;
 
+	if (rec_menu->musica_fondo)
+		Mix_PlayMusic(rec_menu->musica_fondo, -1);
 }
 
 void iniciar_eventos_globales(eventos_globales *ev_gl)
@@ -152,6 +161,9 @@ void iniciar_componente()
 	if (TTF_Init() == -1) 
 		game_log(LOG_ERROR, "SDL_ttf error: %s\n", TTF_GetError());
 
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+		printf("Error: %s\n", Mix_GetError());
+
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 }
@@ -188,14 +200,22 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 
 void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
 {
+	int opcion_anterior = rec_menu->opcion;
+
 	if (evento.key.keysym.sym == SDLK_UP && rec_menu->opcion > 0)
 		rec_menu->opcion--;
 	if (evento.key.keysym.sym == SDLK_DOWN && rec_menu->opcion < 3)
 		rec_menu->opcion++;
-	if (rec_menu->opcion > 3) 
-		rec_menu->opcion = 0;
+
+	if (rec_menu->opcion > 2)
+		rec_menu->opcion = 0; 
 	if (rec_menu->opcion < 0) 
-		rec_menu->opcion=3;
-	
-	
+		rec_menu->opcion = 2;
+
+
+	if(opcion_anterior != rec_menu->opcion)
+	{
+		if (rec_menu->sfx_opcion)
+    		Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+	}
 }

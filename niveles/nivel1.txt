@@ -1,3 +1,40 @@
-1:1
-2:2
-3:3
+# ==============================================================================
+# NIVEL 1 - DEMOSTRACION DE ARQUITECTURA MULTIJUGADOR
+# Formato: tiempo_golpe;duracion;carril
+#
+# duracion: 0.0 = tecla corta | > 0.0 = tecla larga (mantenida)
+# carril: 0,1,2,3 (Jugador 1) | 4,5,6,7 (Jugador 2) | -1 = Carril Aleatorio
+# ==============================================================================
+
+# FASE 1: Calentamiento (Notas cortas simples sincronizadas)
+1.5;0.0;0
+1.5;0.0;7
+2.0;0.0;1
+2.0;0.0;6
+2.5;0.0;2
+2.5;0.0;5
+3.0;0.0;3
+3.0;0.0;4
+
+# FASE 2: Prueba de primitivas (Notas largas)
+# Ambas inician en el segundo 4.0 y duran 1 segundo (Terminan en el 5.0)
+# Se respeta el límite arquitectónico de máximo 2 notas largas simultáneas.
+4.0;1.0;0
+4.0;1.0;4
+
+# FASE 3: Prueba de Entropía BSD (arc4random_uniform)
+# El motor asignará estas 6 notas cortas a carriles desocupados al azar en tiempo de carga.
+5.5;0.0;-1
+5.7;0.0;-1
+5.9;0.0;-1
+6.1;0.0;-1
+6.3;0.0;-1
+6.5;0.0;-1
+
+# FASE 4: Acorde Mixto Final
+# Combina posiciones estrictas y posiciones aleatorias en el mismo milisegundo.
+# El parser validará que los carriles -1 no caigan encima del carril 1 ni del 6.
+7.0;1.5;1
+7.0;1.5;6
+7.0;0.0;-1
+7.0;0.0;-1

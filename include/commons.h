@@ -80,6 +80,49 @@ typedef struct {
 } menu_principal_recursos;
 
 /*--------------------------------------------------------------*/
+/* Logica de juego */
+typedef enum {
+    NOTA_SIMPLE,
+    NOTA_LARGA
+} TIPO_NOTA;
+
+typedef enum {
+    NOTA_ESPERANDO,   /* sigue bajando */
+    NOTA_MANTENIDA,   /* el jugador continua presionando */
+    NOTA_GOLPEADA,    /* acertada */
+    NOTA_FALLADA      /* pasa de largo */
+} ESTADO_NOTA;
+
+/* TODO: carriles de notas
+typedef enum {
+} carriles;
+*/
+
+typedef struct {
+	float tiempo_golpe;  /* l momento exacto en que la base de la nota toca al juez */
+	float duracion;      /* si es 0.0f, es nota normal. Si es > 0.0f, es tecla larga */
+	int carril;          /* 0 a 3 (Jugador 1) | 4 a 7 (Jugador 2) */
+	float y_actual;      /* Posición calculada de la base */
+	bool activa;
+	bool siendo_presionada; /* TRUE si el jugador la está manteniendo pisada */
+} Nota;
+
+typedef struct {
+	SDL_Keycode teclas_p1[4];
+	SDL_Keycode teclas_p2[4];
+	bool teclas_aleatorias; /* Bandera que lee el parser del nivel.txt */
+	Nota *arreglo_notas;
+	int total_notas;
+	int notas_pasadas;
+} MapaCancion;
+
+typedef struct {
+	bool single_player;
+	bool niveles_aleatorios;
+	int dificultad;
+} tipo_partida;
+
+/* ---------------------------------------------- */
 
 /* eventos y estados globables (requeridos por todo el juego) */
 typedef enum {
@@ -107,47 +150,12 @@ typedef struct {
 	menu_principal_recursos rec_menu;
 	float iris_radius;
    bool is_iris_fading_out;
-	
+   MapaCancion mapa_actual;
+
 } eventos_globales;
 
 /* -------------------------------------------------- */
 
-/* Logica de juego */
-typedef enum {
-    NOTA_SIMPLE,
-    NOTA_LARGA
-} TIPO_NOTA;
-
-typedef enum {
-    NOTA_ESPERANDO,   /* sigue bajando */
-    NOTA_MANTENIDA,   /* el jugador continua presionando */
-    NOTA_GOLPEADA,    /* acertada */
-    NOTA_FALLADA      /* pasa de largo */
-} ESTADO_NOTA;
-
-/* TODO: carriles de notas
-typedef enum {
-} carriles;
-*/
-typedef struct {
-    TIPO_NOTA tipo;
-	 ESTADO_NOTA estado;
-    SDL_Rect hitbox; 
-    int carril;       
-} Nota;
-
-typedef struct {
-    Nota *notas;
-    int total_notas;
-} MapaCancion;
-
-typedef struct {
-	bool single_player;
-	bool niveles_aleatorios;
-	int dificultad;
-} tipo_partida;
-
-/* ---------------------------------------------- */
 
 /* primitivas */
 
@@ -160,5 +168,9 @@ void assets_load(void);
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL seleccionar_niveles(void);
 ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento);
+
+/* primitivas de selector de niveles */
+MapaCancion cargar_nivel(const char *ruta_archivo);
+MapaCancion cargar_nivel_desde_lista(int indice_elegido);
 
 #endif

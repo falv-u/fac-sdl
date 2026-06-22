@@ -9,6 +9,7 @@
 #include <time.h>
 
 void listar_niveles();
+
 ESTADO_ACTUAL seleccionar_niveles()
 {
 	listar_niveles();
@@ -80,3 +81,111 @@ void listar_niveles()
     game_log(LOG_INFO, "Datos de niveles exportados correctamente.", 0);
 }
 
+MapaCancion cargar_nivel(const char *ruta_archivo)
+{
+    MapaCancion mapa = {0};
+    if (strlen(ruta_archivo) == 0) return mapa;
+
+    FILE *archivo = fopen(ruta_archivo, "r");
+    char linea[128];
+
+    if (!archivo) {
+        game_log(LOG_ERROR, "No se pudo abrir el mapa", ruta_archivo);
+        return mapa;
+    }
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+        if (linea[0] != '#' && linea[0] != '\n') mapa.total_notas++;
+    }
+
+    mapa.arreglo_notas = (Nota *)malloc(sizeof(Nota) * mapa.total_notas);
+    rewind(archivo);
+
+    int indice = 0;
+    while (fgets(linea, sizeof(linea), archivo)) 
+    {
+        if (linea[0] == '#' || linea[0] == '\n') continue;
+
+        float t_golpe, duracion;
+        int carril;
+        
+        /*  tiempo;duracion;carril */
+        if (sscanf(linea, "%f;%f;%d", &t_golpe, &duracion, &carril) == 3) 
+        {
+            if (duracion > 0.0f) 
+            {
+                int largas_activas = 0;
+                for (int j = 0; j < indice; j++) {
+                    if (mapa.arreglo_notas[j].duracion > 0.0f) {
+                        float fin_previa = mapa.arreglo_notas[j].tiempo_golpe + mapa.arreglo_notas[j].duracion;
+                        if (t_golpe < fin_previa) largas_activas++; /* Hay choque temporal */
+                    }
+                }
+                
+                if (largas_activas >= 2) {
+                    game_log(LOG_WARN, "Superposicion detectada. Forzando tecla corta.", linea);
+                    duracion = 0.0f;
+                }
+            }
+
+            /* Aleatoriedad de Carril (-1 en el txt) */
+            if (carril == -1) 
+            {
+                int candidato;
+                while (1) {
+						 /* funcion rara encontrada en foro, estudiar mas tarde */
+                    candidato = arc4random_uniform(8); /* 0 a 7,  */
+                    int choca = 0;
+                    
+                    /* Revisar hacia atrás si el carril candidato está ocupado */
+                    for (int j = 0; j < indice; j++) {
+                        float fin_previa = mapa.arreglo_notas[j].tiempo_golpe + mapa.arreglo_notas[j].duracion;
+                        if (t_golpe < fin_previa && mapa.arreglo_notas[j].carril == candidato) {
+                            choca = 1; /* Carril ocupado, hay que buscar otro */
+                            break;
+                        }
+                    }
+                    if (!choca) break; 
+                }
+                carril = candidato;
+            }
+
+            /* Asignar a la RAM */
+            mapa.arreglo_notas[indice].tiempo_golpe = t_golpe;
+            mapa.arreglo_notas[indice].duracion = duracion;
+            mapa.arreglo_notas[indice].carril = carril;
+            mapa.arreglo_notas[indice].activa = true;
+            mapa.arreglo_notas[indice].y_actual = -100.0f;
+            indice++;
+        }
+    }
+
+    fclose(archivo);
+    return mapa;
+}
+
+MapaCancion cargar_nivel_desde_lista(int indice_elegido)
+{
+    listar_niveles();
+
+    char ruta_elegida[512] = "";
+    FILE *db = fopen("./niveles_db.txt", "r");
+    
+    if (db) {
+        char linea[512];
+        fgets(linea, sizeof(linea), db); /* Ignorar la cabecera que imprime tu ls */
+        
+        int actual = 0;
+        while(fgets(linea, sizeof(linea), db)) {
+            if (actual == indice_elegido) {
+                int num;
+                sscanf(linea, "%d;%[^;];", &num, ruta_elegida);
+                break;
+            }
+            actual++;
+        }
+        fclose(db);
+    }
+
+    return cargar_nivel(ruta_elegida);
+}

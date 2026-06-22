@@ -1,5 +1,6 @@
 /* Librerias estandar */
 #include <stdbool.h>
+#include <math.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -19,6 +20,10 @@ void manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
 void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
+
+
+void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento);
+void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl);
 
 int main(void)
 {
@@ -192,19 +197,27 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
 			{
 				eventos_globales_accionados_simples(ev_gl, evento);
-				teclas_menu_principal(rec_menu, evento);
-
-				if (evento.key.keysym.sym == SDLK_RETURN)
+				if (ev_gl->estado_juego == ESTADO_MENU) 
 				{
+					teclas_menu_principal(rec_menu, evento);
 
-					if (rec_menu->opcion == 0)
-						ev_gl->estado_juego= ESTADO_JUEGO;
-
-					if (rec_menu->opcion == 1)
-
-					if (rec_menu->opcion == 2)
-						ev_gl->estado_juego= ESTADO_SALIR;
+					if (evento.key.keysym.sym == SDLK_RETURN)
+					{
+						if (rec_menu->opcion == 0)
+						{
+							ev_gl->is_iris_fading_out = true;
+							ev_gl->mapa_actual = cargar_nivel_desde_lista(0);
+							ev_gl->tiempo_juego = 0.0f;
+							ev_gl->estado_juego = ESTADO_JUEGO;
+						}
+						if (rec_menu->opcion == 2)
+							ev_gl->estado_juego = ESTADO_SALIR;
+					}
 				}
+				else if (ev_gl->estado_juego == ESTADO_JUEGO)
+            {
+                teclas_juego_principal(ev_gl, evento);
+            }
 			}
 		}
 
@@ -230,4 +243,57 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
 		if (rec_menu->sfx_opcion)
     		Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
 	}
+}
+
+
+
+void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl)
+{
+    for (int i = ev_gl->mapa_actual.notas_pasadas; i < ev_gl->mapa_actual.total_notas; i++)
+    {
+        Nota *n = &ev_gl->mapa_actual.arreglo_notas[i];
+
+        if (n->activa == false || n->carril != carril_presionado)
+            continue;
+
+        float delta_t = (float)fabs(n->tiempo_golpe - ev_gl->tiempo_juego);
+
+        /* Si está muy en el futuro, rompemos el ciclo para no gastar CPU */
+        if (delta_t > 0.20f && n->tiempo_golpe > ev_gl->tiempo_juego)
+            break;
+
+        /* Evaluación de precisión (usando los márgenes duros) */
+        if (delta_t <= 0.05f) {
+            game_log(LOG_INFO, "PERFECT", 0);
+            n->activa = false; 
+            break;
+        } else if (delta_t <= 0.10f) {
+            game_log(LOG_INFO, "GOOD", 0);
+            n->activa = false;
+            break;
+        } else if (delta_t <= 0.20f) {
+            game_log(LOG_INFO, "BAD", 0);
+            n->activa = false;
+            break;
+        }
+    }
+}
+
+void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
+{
+	int carril_presionado = -1;
+	/* Carriles P1 */
+	if (evento.key.keysym.sym == SDLK_h) carril_presionado = 0;
+	else if (evento.key.keysym.sym == SDLK_j) carril_presionado = 1;
+	else if (evento.key.keysym.sym == SDLK_k) carril_presionado = 2;
+	else if (evento.key.keysym.sym == SDLK_l) carril_presionado = 3;
+
+	/* Carriles P2 (Ejemplo, ajústalo a las teclas que prefieras) */
+	else if (evento.key.keysym.sym == SDLK_q) carril_presionado = 4;
+	else if (evento.key.keysym.sym == SDLK_w) carril_presionado = 5;
+	else if (evento.key.keysym.sym == SDLK_e) carril_presionado = 6;
+	else if (evento.key.keysym.sym == SDLK_r) carril_presionado = 7;
+
+	if (carril_presionado != -1)
+	  evaluar_golpe(carril_presionado, ev_gl);
 }

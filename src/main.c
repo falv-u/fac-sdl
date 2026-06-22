@@ -193,6 +193,18 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 			{
 				eventos_globales_accionados_simples(ev_gl, evento);
 				teclas_menu_principal(rec_menu, evento);
+
+				if (evento.key.keysym.sym == SDLK_RETURN)
+				{
+
+					if (rec_menu->opcion == 0)
+						ev_gl->estado_juego= ESTADO_JUEGO;
+
+					if (rec_menu->opcion == 1)
+
+					if (rec_menu->opcion == 2)
+						ev_gl->estado_juego= ESTADO_SALIR;
+				}
 			}
 		}
 

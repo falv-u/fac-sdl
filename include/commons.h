@@ -24,6 +24,10 @@
 #define TARGET_FPS      60
 #define FRAME_TARGET_TIME (1000/FPS)
 
+#define Y_JUEZ 600.0f
+#define Y_SPAWN -64.0f
+#define TIEMPO_APROXIMACION 1.5f /* La flecha tarda 1.5s en caer desde que aparece */
+
 extern int last_frame_time;
 
 /* renderizado */

@@ -24,6 +24,9 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 
 void actualizar_notas(float dt, eventos_globales *ev_gl, Nota *mapa, int total_notas)
 {
-    ev_gl->tiempo_juego += dt;
+	int i;
+	ev_gl->tiempo_juego += dt;
+	float distancia_total = Y_JUEZ - Y_SPAWN;
+	float velocidad = distancia_total / TIEMPO_APROXIMACION;
 
 }

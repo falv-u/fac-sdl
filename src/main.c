@@ -16,7 +16,8 @@ void iniciar_eventos_globales(eventos_globales *ev_gl);
 void manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
 
 void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
-void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento);
+void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
 
 int main(void)
 {
@@ -38,7 +39,7 @@ int main(void)
 		update(delta_time, &ev_gl,  &rec_menu);
 
 		/* ignorar warning ya que se declara al incio de la funcion para los eventos de usuario */ 
-		eventos_accionados_usuario(&ev_gl, evento); 
+		eventos_accionados_usuario(&ev_gl, evento, &rec_menu); 
       
 		switch (ev_gl.estado_juego)
 			{
@@ -77,7 +78,7 @@ int main(void)
 
 void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl)
 {
-
+	rec_menu->opcion=1;
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/Silver.ttf", 64);
 	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
 
@@ -92,7 +93,9 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->color3.r = 0;
 	rec_menu->color3.g = 34;
 	rec_menu->color3.b = 255;
-
+	
+	
+	
 	if (rec_menu->fuente) 
 	{
         SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
@@ -170,27 +173,29 @@ void manejo_delta_time(float *delta_time, unsigned int *last_frame_time)
 		SDL_Delay(FRAME_TARGET_TIME - frame_duration);
 }
 
-void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento)
+void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	while (SDL_PollEvent(&evento))
 		{
-
-			eventos_globales_accionados_simples(ev_gl, evento);
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
 			{
-
-				if (evento.key.keysym.sym == SDLK_i)
-					ev_gl->is_iris_fading_out = true;
-
-				if (evento.key.keysym.sym == SDLK_RETURN)
-				{
-					if (ev_gl->estado_juego == ESTADO_MENU) 
-						ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
-				}
-			
+				eventos_globales_accionados_simples(ev_gl, evento);
+				teclas_menu_principal(rec_menu, evento);
 			}
 		}
 
 }
 
-
+void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
+{
+	if (evento.key.keysym.sym == SDLK_UP && rec_menu->opcion > 0)
+		rec_menu->opcion--;
+	if (evento.key.keysym.sym == SDLK_DOWN && rec_menu->opcion < 3)
+		rec_menu->opcion++;
+	if (rec_menu->opcion > 3) 
+		rec_menu->opcion = 0;
+	if (rec_menu->opcion < 0) 
+		rec_menu->opcion=3;
+	
+	
+}

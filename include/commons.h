@@ -38,6 +38,7 @@ SDL_Window *crear_ventana();
 #define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
 
 /* MENU */
+
 typedef struct {
     int src_x, src_y;  // Coordenadas de origen 1024x1024
     int dest_x, dest_y;// Coordenadas de destino en la pantalla
@@ -68,7 +69,7 @@ typedef struct {
 	SDL_Color color2;
 	SDL_Color color3;
 
-	ElementosMenu elementos[3];
+	int opcion;
 } menu_principal_recursos;
 
 /*--------------------------------------------------------------*/

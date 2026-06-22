@@ -3,7 +3,6 @@
 #include "SDL_render.h"
 
 #include "commons.h"
-#include <math.h>
 
 void renderizar_fractales(eventos_globales ev_gl);
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
@@ -11,6 +10,7 @@ void fade_iris_out(eventos_globales *ev_gl);
 
 void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
+void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento; /* para eliminar warning, no relevante */
@@ -18,6 +18,7 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 	SDL_RenderClear(ev_gl->renderizado);
 	
 	pintar_gradiente_noche_menu(ev_gl->renderizado);
+
 	fondo_menu(ev_gl, rec_menu);
 
 
@@ -29,12 +30,37 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 	return ESTADO_MENU;
 }
 
+void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+{
+
+	/* ns: no_select, s: select */
+	SDL_Rect src_opcion_s = {3*64, 23, 64, 23};
+	SDL_Rect src_opcion_ns = {3*64, 0*64, 64, 21};
+
+	if (rec_menu->opcion == 0) {
+	
+	}
+	SDL_Rect dest_opcion_s = {ANCHO_PANTALLA/6, LARGO_PANTALLA/2.5, 64*(ESCALADO_1+0.6), 64*1.5};
+	SDL_Rect dest_opcion_ns = {ANCHO_PANTALLA/12, LARGO_PANTALLA/2.5, 64*(ESCALADO_1+0.6), 64*1.5};
+	SDL_Rect dest_opcion_ns_1 = {ANCHO_PANTALLA/12, LARGO_PANTALLA/1.8, 64*(ESCALADO_1+0.6), 64*1.5};
+	SDL_Rect dest_opcion_ns_2 = {ANCHO_PANTALLA/12, LARGO_PANTALLA/1.4, 64*(ESCALADO_1+0.6), 64*1.5};
+
+	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_ns, &dest_opcion_ns);
+	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_ns, &dest_opcion_ns_1);
+	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_ns, &dest_opcion_ns_2);
+	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_s, &dest_opcion_s);
+}
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
 
 	int ancho_final=64*8*ESCALADO_1;
 	int alto_final=64*ESCALADO_1;
 
+	int x_izquierda_opt = (int)(ANCHO_PANTALLA / 12);
+	int y_inicial_opt   = (int)(LARGO_PANTALLA / 2.5);
+	int ancho_final_opt = (int)(64 * (ESCALADO_1 + 0.6));
+	int alto_final_opt  = (int)(64 * 1.5);
+	int espaciado_opt   = alto_final_opt + 24;
 
 	if (rec_menu->sprites) 
 	{
@@ -64,11 +90,46 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_0);
       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_1);
       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_2);
+		
+
+		SDL_Rect src_opcion_ns = {3 * 64, 0, 64, 21};  /* Estado: No Seleccionada */
+		SDL_Rect src_opcion_s  = {3 * 64, 23, 64, 23}; /* Estado: Seleccionada */
+
+		SDL_Rect dest_opcion1 = {
+			x_izquierda_opt, 
+			y_inicial_opt, 
+			ancho_final_opt, 
+			alto_final_opt
+		};
+
+		/* Opción 2 (Centro) */
+		SDL_Rect dest_opcion2 = {
+			x_izquierda_opt, 
+			y_inicial_opt + espaciado_opt, 
+			ancho_final_opt, 
+			alto_final_opt
+		};
+
+		/* Opción 3 (Inferior) */
+		SDL_Rect dest_opcion3 = {
+			x_izquierda_opt, 
+			y_inicial_opt + (espaciado_opt * 2), 
+			ancho_final_opt, 
+			alto_final_opt
+		};
+
+		SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_s : &src_opcion_ns;
+		SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_s : &src_opcion_ns;
+		SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_s : &src_opcion_ns;
+
+		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_1, &dest_opcion1);
+      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_2, &dest_opcion2);
+      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_3, &dest_opcion3);
 	}
 
-	SDL_Rect rectDestino = { 100, 100, rec_menu->titulo_w, rec_menu->titulo_h };
+	SDL_Rect dest_titulo = { 100, 100, rec_menu->titulo_w, rec_menu->titulo_h };
 	if (rec_menu->textura_titulo) 
-		SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &rectDestino);
+		SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &dest_titulo);
 	
 }
 void fade_iris_out(eventos_globales *ev_gl)

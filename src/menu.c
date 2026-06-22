@@ -118,6 +118,8 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 			alto_final_opt
 		};
 
+		/* ahorro de lineas, debi conocer esto antes */
+		/* si se cumple y es verdadero se usa ?, si no : */
 		SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_s : &src_opcion_ns;
 		SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_s : &src_opcion_ns;
 		SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_s : &src_opcion_ns;

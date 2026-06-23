@@ -6,6 +6,7 @@
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
+#include "SDL_gamecontroller.h"
 #include "SDL_mixer.h"
 #include "SDL_rect.h"
 #include "SDL_video.h"
@@ -151,7 +152,8 @@ typedef struct {
 	float iris_radius;
    bool is_iris_fading_out;
    MapaCancion mapa_actual;
-
+	
+	SDL_GameController *mando_p1;
 } eventos_globales;
 
 /* -------------------------------------------------- */

@@ -14,6 +14,13 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 	if (ev_gl->is_iris_fading_out == true)
 	{
 		ev_gl->iris_radius -= 800.0*dt;
+
+		if (ev_gl->iris_radius <= 0.0f && ev_gl->estado_juego == ESTADO_MENU)
+		{
+			ev_gl->mapa_actual = cargar_nivel_desde_lista(0);
+			ev_gl->tiempo_juego = 0.0f;
+			ev_gl->estado_juego = ESTADO_JUEGO;
+		}
 	}
 
 	switch (ev_gl->estado_juego)
@@ -36,30 +43,32 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 
 void actualizar_notas(float dt, eventos_globales *ev_gl)
 {
-    ev_gl->tiempo_juego += dt;
-    float velocidad = (Y_JUEZ - Y_SPAWN) / TIEMPO_APROXIMACION;
+	ev_gl->tiempo_juego += dt;
+	float velocidad = (Y_JUEZ - Y_SPAWN) / TIEMPO_APROXIMACION;
 
-    for ( int i = (ev_gl->mapa_actual.notas_pasadas); (i < ev_gl->mapa_actual.total_notas) ; i++) 
-    {
-        Nota *n = &ev_gl->mapa_actual.arreglo_notas[i];
+	while (ev_gl->mapa_actual.notas_pasadas < ev_gl->mapa_actual.total_notas &&
+		   ev_gl->mapa_actual.arreglo_notas[ev_gl->mapa_actual.notas_pasadas].activa == false)
+	{
+		ev_gl->mapa_actual.notas_pasadas++;
+	}
 
-        if (n->activa == false) continue;
+	for ( int i = ev_gl->mapa_actual.notas_pasadas; i < ev_gl->mapa_actual.total_notas; i++) 
+	{
+		Nota *n = &ev_gl->mapa_actual.arreglo_notas[i];
 
-        float tiempo_restante = n->tiempo_golpe - ev_gl->tiempo_juego;
+		if (n->activa == false) continue;
 
-        if (tiempo_restante > TIEMPO_APROXIMACION) {
-            n->y_actual = Y_SPAWN;
-            break; 
-        }
+		float tiempo_restante = n->tiempo_golpe - ev_gl->tiempo_juego;
 
-        /* Empujamos la nota hacia abajo */
-        n->y_actual = Y_JUEZ - (velocidad * tiempo_restante);
+		if (tiempo_restante > TIEMPO_APROXIMACION) {
+			n->y_actual = Y_SPAWN;
+			continue; 
+		}
 
-        /* Si la nota completa (inicio + duración) paso la zona de error por inactividad */
-        if ((tiempo_restante + n->duracion) < -VENTANA_MISS) {
-            n->activa = false;
-            ev_gl->mapa_actual.notas_pasadas++; 
-            game_log(LOG_INFO, "MISS - Nota perdida", 0);
-        }
-    }
-}
+		n->y_actual = Y_JUEZ - (velocidad * tiempo_restante);
+
+		if ((tiempo_restante + n->duracion) < -VENTANA_MISS) {
+			n->activa = false;
+			game_log(LOG_INFO, "MISS - Nota perdida", 0);
+		}
+	}}

@@ -5,7 +5,7 @@ ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento)
 {
 
 	(void)evento; /* evita warning, ignora */
-
+	
    SDL_SetRenderDrawColor(ev_gl->renderizado, 15, 15, 20, 255);
 	SDL_RenderClear(ev_gl->renderizado);
 
@@ -19,7 +19,7 @@ ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento)
 		int x_carril_juez = x_base + (carril * 64);
 		if (carril >= 4) x_carril_juez += 64; /* Espacio de separación P1 y P2 */
 
-		SDL_Rect rect_juez = { x_carril_juez, (int)Y_JUEZ, 64, 32 };
+		SDL_Rect rect_juez = { x_carril_juez, (int)Y_JUEZ-16, 64, 32 };
 		SDL_RenderDrawRect(ev_gl->renderizado, &rect_juez);
 	}
 
@@ -50,12 +50,11 @@ ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento)
 			x_carril += 64; 
 
 		SDL_Rect rect_nota = {
-		x_carril,
-		(int)(n->y_actual - alto_primitiva), 
-		64,
-		alto_primitiva
-		};
-
+			x_carril,
+			(int)(n->y_actual - alto_primitiva + 16), 
+			64,
+			alto_primitiva
+		};		
 		SDL_RenderFillRect(ev_gl->renderizado, &rect_nota);
 	}
 

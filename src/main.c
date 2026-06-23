@@ -4,7 +4,8 @@
 
 /* librerias sistema no estandar */
 /* headers propios */
-#include "SDL_events.h"
+#include "SDL_events.h" 
+#include "SDL_gamecontroller.h" 
 #include "SDL_keycode.h"
 #include "SDL_ttf.h"
 #include "SDL_image.h"
@@ -24,6 +25,10 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
 
 void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento);
 void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl);
+
+void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 
 int main(void)
 {
@@ -76,6 +81,12 @@ int main(void)
 
 	}
 
+	if (ev_gl.mando_p1 != NULL) 
+	{
+   	SDL_GameControllerClose(ev_gl.mando_p1);
+   	ev_gl.mando_p1 = NULL;
+	}
+
 	SDL_DestroyWindow(ev_gl.ventana);
 	Mix_HaltMusic();
 	Mix_FreeMusic(rec_menu.musica_fondo);
@@ -105,7 +116,7 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 	rec_menu->color3.g = 34;
 	rec_menu->color3.b = 255;
 	
-	rec_menu->musica_fondo= Mix_LoadMUS("./assets/music/song68.ogg");
+	rec_menu->musica_fondo= Mix_LoadMUS("./assets/music/zenith_sector/bg_start_3.ogg");
 	rec_menu->sfx_opcion = Mix_LoadWAV("./assets/sfx/undertale-select-sound.wav");
 
 	if (rec_menu->fuente) 
@@ -133,6 +144,7 @@ void iniciar_eventos_globales(eventos_globales *ev_gl)
 	ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
 	ev_gl->iris_radius = 800.0;
 	ev_gl->is_iris_fading_out = false;
+	ev_gl->mando_p1 = NULL;
 	SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 
 }
@@ -159,10 +171,12 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 
 void iniciar_componente()
 {
-
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) 
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) 
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
-	
+	/* base de datos sdl comunitaria para dispositivos plug */
+	if (SDL_GameControllerAddMappingsFromFile("./gamecontrollerdb.txt") < 0) {
+		game_log(LOG_WARN, "No se encontro gamecontrollerdb.txt o hubo un error", SDL_GetError());
+	}
 	if (TTF_Init() == -1) 
 		game_log(LOG_ERROR, "SDL_ttf error: %s\n", TTF_GetError());
 
@@ -194,21 +208,22 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 {
 	while (SDL_PollEvent(&evento))
 		{
+			eventos_globales_accionados_simples(ev_gl, evento);
+			manejo_mando(ev_gl, evento, rec_menu);
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0)
 			{
-				eventos_globales_accionados_simples(ev_gl, evento);
 				if (ev_gl->estado_juego == ESTADO_MENU) 
 				{
 					teclas_menu_principal(rec_menu, evento);
 
 					if (evento.key.keysym.sym == SDLK_RETURN)
 					{
+						if (rec_menu->musica_fondo)
+							Mix_PlayMusic(rec_menu->musica_fondo, -1);
+
 						if (rec_menu->opcion == 0)
 						{
 							ev_gl->is_iris_fading_out = true;
-							ev_gl->mapa_actual = cargar_nivel_desde_lista(0);
-							ev_gl->tiempo_juego = 0.0f;
-							ev_gl->estado_juego = ESTADO_JUEGO;
 						}
 						if (rec_menu->opcion == 2)
 							ev_gl->estado_juego = ESTADO_SALIR;
@@ -288,7 +303,7 @@ void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
 	else if (evento.key.keysym.sym == SDLK_k) carril_presionado = 2;
 	else if (evento.key.keysym.sym == SDLK_l) carril_presionado = 3;
 
-	/* Carriles P2 (Ejemplo, ajústalo a las teclas que prefieras) */
+	/* Carriles P2 */
 	else if (evento.key.keysym.sym == SDLK_q) carril_presionado = 4;
 	else if (evento.key.keysym.sym == SDLK_w) carril_presionado = 5;
 	else if (evento.key.keysym.sym == SDLK_e) carril_presionado = 6;
@@ -296,4 +311,107 @@ void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
 
 	if (carril_presionado != -1)
 	  evaluar_golpe(carril_presionado, ev_gl);
+}
+
+
+void manejo_mando(eventos_globales *ev_gl,  SDL_Event evento, menu_principal_recursos *rec_menu)
+{
+	if (evento.type == SDL_CONTROLLERDEVICEADDED) 
+	{
+		if (ev_gl->mando_p1 == NULL)
+		{
+			ev_gl->mando_p1 = SDL_GameControllerOpen(evento.cdevice.which);
+			if (ev_gl->mando_p1)
+			game_log(LOG_INFO, "Mando 1 conectado", SDL_GameControllerName(ev_gl->mando_p1));
+		}
+	} else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) 
+		{
+			SDL_GameController *mando_desconectado = SDL_GameControllerFromInstanceID(evento.cdevice.which);
+			if (ev_gl->mando_p1 == mando_desconectado)
+			{
+				SDL_GameControllerClose(ev_gl->mando_p1);
+				ev_gl->mando_p1 = NULL;
+				game_log(LOG_INFO, "Mando P1 desconectado", 0);
+			}
+	}
+if (evento.type == SDL_CONTROLLERBUTTONDOWN)
+	{
+		if (ev_gl->estado_juego == ESTADO_JUEGO)
+			botones_mando_juego_principal(ev_gl, evento, rec_menu);
+		else if (ev_gl->estado_juego == ESTADO_MENU)
+			botones_mando_menu_principal(ev_gl, evento, rec_menu); /* Invocación para el menú */
+	}
+}
+
+void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+{
+	int carril_presionado = -1;
+
+	switch (evento.cbutton.button) 
+	{
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			carril_presionado = 0; 
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:   
+			carril_presionado = 1; 
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:         
+			carril_presionado = 2; 
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:         
+			carril_presionado = 3; 
+			break;
+	
+		case SDL_CONTROLLER_BUTTON_X:
+			carril_presionado = 0; 
+			break;
+		case SDL_CONTROLLER_BUTTON_Y:   
+			carril_presionado = 1; 
+			break;
+		case SDL_CONTROLLER_BUTTON_A:         
+			carril_presionado = 2; 
+			break;
+		case SDL_CONTROLLER_BUTTON_B:         
+			carril_presionado = 3; 
+		
+	}
+
+	if (carril_presionado != -1)
+		evaluar_golpe(carril_presionado, ev_gl);
+	
+}
+
+void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+{
+	int opcion_anterior = rec_menu->opcion;
+
+	switch (evento.cbutton.button) 
+	{
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			if (rec_menu->opcion > 0) rec_menu->opcion--;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			if (rec_menu->opcion < 3) rec_menu->opcion++;
+			break;
+		case SDL_CONTROLLER_BUTTON_START:
+			if (rec_menu->musica_fondo)
+				Mix_PlayMusic(rec_menu->musica_fondo, -1);
+
+			if (rec_menu->opcion == 0)
+				ev_gl->is_iris_fading_out = true;
+			else if (rec_menu->opcion == 2)
+				ev_gl->estado_juego = ESTADO_SALIR;
+			break;
+	}
+
+	if (rec_menu->opcion > 2)
+		rec_menu->opcion = 0; 
+	if (rec_menu->opcion < 0) 
+		rec_menu->opcion = 2;
+
+	if(opcion_anterior != rec_menu->opcion)
+	{
+		if (rec_menu->sfx_opcion)
+			Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+	}
 }

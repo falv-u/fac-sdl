@@ -94,7 +94,8 @@ MapaCancion cargar_nivel(const char *ruta_archivo)
         return mapa;
     }
 
-    while (fgets(linea, sizeof(linea), archivo)) {
+    while (fgets(linea, sizeof(linea), archivo))
+	 {
         if (linea[0] != '#' && linea[0] != '\n') mapa.total_notas++;
     }
 

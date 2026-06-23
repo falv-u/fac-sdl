@@ -23,8 +23,9 @@ target("game")
         add_requires("libsdl2",       {system = true, configs = {sysconfig = {pc = "sdl2"}}})
         add_requires("libsdl2_ttf",   {system = true, configs = {sysconfig = {pc = "SDL2_ttf"}}})
         add_requires("libsdl2_image", {system = true, configs = {sysconfig = {pc = "SDL2_image"}}})
+        add_requires("libsdl2_mixer", {system = true, configs = {sysconfig = {pc = "SDL2_mixer"}}})
         
-        add_packages("libsdl2", "libsdl2_ttf", "libsdl2_image")
+        add_packages("libsdl2", "libsdl2_ttf", "libsdl2_image", "libsdl2_mixer")
 
         set_targetdir("linux")
     end

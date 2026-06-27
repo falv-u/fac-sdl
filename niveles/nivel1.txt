@@ -1,6 +1,10 @@
 # Analizando assets/music/zenith_sector/bg_start_3.ogg (44100 Hz)
 # Umbral: 0.60x | Energia Minima: 0.30
 # tiempo;duracion;carril
+
+0.000;0.00;-1
+0.000;0.00;-1
+0.000;0.00;-1
 0.000;0.00;-1
 0.116;0.00;-1
 0.232;0.00;-1

@@ -92,8 +92,14 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_2);
 		
 
-		SDL_Rect src_opcion_ns = {3 * 64, 0, 64, 21};  /* Estado: No Seleccionada */
-		SDL_Rect src_opcion_s  = {3 * 64, 23, 64, 23}; /* Estado: Seleccionada */
+		SDL_Rect src_opcion_jugar_ns = {3 * 64, 0, 64, 21};  /* Estado: No Seleccionada */
+		SDL_Rect src_opcion_jugar_s  = {3 * 64, 23, 64, 23}; /* Estado: Seleccionada */
+
+		SDL_Rect src_opcion_opt_ns = {0, 4*64, 64, 21};  /* Estado: No Seleccionada */
+		SDL_Rect src_opcion_opt_s  = {0, 4*64+23, 64, 23}; /* Estado: Seleccionada */
+
+		SDL_Rect src_opcion_salir_ns = {0, 5*64, 64, 21};  /* Estado: No Seleccionada */
+		SDL_Rect src_opcion_salir_s = {0, 5*64+23, 64, 23}; /* Estado: Seleccionada */
 
 		SDL_Rect dest_opcion1 = {
 			x_izquierda_opt, 
@@ -120,9 +126,9 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 
 		/* ahorro de lineas, debi conocer esto antes */
 		/* si se cumple y es verdadero se usa ?, si no : */
-		SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_s : &src_opcion_ns;
-		SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_s : &src_opcion_ns;
-		SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_s : &src_opcion_ns;
+		SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_jugar_s : &src_opcion_jugar_ns;
+		SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_opt_s : &src_opcion_opt_ns;
+		SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_salir_s : &src_opcion_salir_ns;
 
 		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_1, &dest_opcion1);
       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_2, &dest_opcion2);

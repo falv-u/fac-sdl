@@ -222,9 +222,9 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 							Mix_PlayMusic(rec_menu->musica_fondo, -1);
 
 						if (rec_menu->opcion == 0)
-						{
 							ev_gl->is_iris_fading_out = true;
-						}
+						if (rec_menu->opcion == 1)
+							ev_gl->estado_juego = ESTADO_SALIR;
 						if (rec_menu->opcion == 2)
 							ev_gl->estado_juego = ESTADO_SALIR;
 					}
@@ -322,7 +322,10 @@ void manejo_mando(eventos_globales *ev_gl,  SDL_Event evento, menu_principal_rec
 		{
 			ev_gl->mando_p1 = SDL_GameControllerOpen(evento.cdevice.which);
 			if (ev_gl->mando_p1)
-			game_log(LOG_INFO, "Mando 1 conectado", SDL_GameControllerName(ev_gl->mando_p1));
+			{
+				game_log(LOG_INFO, "Mando 1 conectado", SDL_GameControllerName(ev_gl->mando_p1));
+				game_log(LOG_DEBUG, "Mando 1 conectado %s", SDL_GameControllerName(ev_gl->mando_p1));
+			}
 		}
 	} else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) 
 		{
@@ -345,6 +348,7 @@ if (evento.type == SDL_CONTROLLERBUTTONDOWN)
 
 void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
+
 	int carril_presionado = -1;
 
 	switch (evento.cbutton.button) 
@@ -373,7 +377,6 @@ void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, me
 			break;
 		case SDL_CONTROLLER_BUTTON_B:         
 			carril_presionado = 3; 
-		
 	}
 
 	if (carril_presionado != -1)

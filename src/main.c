@@ -1,6 +1,7 @@
 /* Librerias estandar */
 #include <stdbool.h>
 #include <math.h>
+#include <stdio.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -24,7 +25,7 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
 
 
 void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento);
-void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl);
+void evaluar_golpe(int carril_presionado, int jugador, eventos_globales *ev_gl);
 
 void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
@@ -40,11 +41,20 @@ int main(void)
 
 	iniciar_componente();
 	iniciar_eventos_globales(&ev_gl); /* la ventana tambien se crea aqui al estar anclada a los eventos globales como cerrar */
+	for (int i = 0; i < SDL_NumJoysticks(); i++) {
+	    if (SDL_IsGameController(i)) {
+	        ev_gl.mando_p1 = SDL_GameControllerOpen(i);
+	        if (ev_gl.mando_p1) {
+	            game_log(LOG_INFO, "Mando pre-conectado detectado y asignado", SDL_GameControllerName(ev_gl.mando_p1));
+	            break; 
+	        }
+	    }
+	}
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	while (ev_gl.corriendo)
 	{
-      SDL_Event evento;
+		SDL_Event evento;
 
 		manejo_delta_time(&delta_time, &last_frame_time);
 		update(delta_time, &ev_gl,  &rec_menu);
@@ -83,10 +93,16 @@ int main(void)
 
 	if (ev_gl.mando_p1 != NULL) 
 	{
-   	SDL_GameControllerClose(ev_gl.mando_p1);
-   	ev_gl.mando_p1 = NULL;
+		SDL_GameControllerClose(ev_gl.mando_p1);
+	   	ev_gl.mando_p1 = NULL;
 	}
 
+
+	if (ev_gl.mando_p2 != NULL) 
+	{
+		SDL_GameControllerClose(ev_gl.mando_p1);
+	   	ev_gl.mando_p2 = NULL;
+	}
 	SDL_DestroyWindow(ev_gl.ventana);
 	Mix_HaltMusic();
 	Mix_FreeMusic(rec_menu.musica_fondo);
@@ -145,6 +161,7 @@ void iniciar_eventos_globales(eventos_globales *ev_gl)
 	ev_gl->iris_radius = 800.0;
 	ev_gl->is_iris_fading_out = false;
 	ev_gl->mando_p1 = NULL;
+	ev_gl->mando_p2 = NULL;
 	SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 
 }
@@ -156,6 +173,7 @@ void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event even
 			game_log(LOG_INFO, "Cerrando ventana por accion del usuario a traves del servidor grafico ", 0);
 			ev_gl->corriendo = false;
 	}
+
 	if (evento.type == SDL_KEYDOWN &&  evento.key.repeat == 0)
 	{
 		if (evento.key.keysym.sym == SDLK_F9)
@@ -230,9 +248,9 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 					}
 				}
 				else if (ev_gl->estado_juego == ESTADO_JUEGO)
-            {
-                teclas_juego_principal(ev_gl, evento);
-            }
+            			{
+			                teclas_juego_principal(ev_gl, evento);
+        			}
 			}
 		}
 
@@ -262,7 +280,7 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
 
 
 
-void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl)
+void evaluar_golpe(int carril_presionado, int jugador, eventos_globales *ev_gl)
 {
     for (int i = ev_gl->mapa_actual.notas_pasadas; i < ev_gl->mapa_actual.total_notas; i++)
     {
@@ -273,21 +291,24 @@ void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl)
 
         float delta_t = (float)fabs(n->tiempo_golpe - ev_gl->tiempo_juego);
 
-        /* Si está muy en el futuro, rompemos el ciclo para no gastar CPU */
         if (delta_t > 0.20f && n->tiempo_golpe > ev_gl->tiempo_juego)
             break;
 
-        /* Evaluación de precisión (usando los márgenes duros) */
+        char msg[64];
+
         if (delta_t <= 0.05f) {
-            game_log(LOG_INFO, "PERFECT", 0);
+            snprintf(msg, sizeof(msg), "[P%d] PERFECT", jugador);
+            game_log(LOG_INFO, msg, 0);
             n->activa = false; 
             break;
         } else if (delta_t <= 0.10f) {
-            game_log(LOG_INFO, "GOOD", 0);
+            snprintf(msg, sizeof(msg), "[P%d] GOOD", jugador);
+            game_log(LOG_INFO, msg, 0);
             n->activa = false;
             break;
         } else if (delta_t <= 0.20f) {
-            game_log(LOG_INFO, "BAD", 0);
+            snprintf(msg, sizeof(msg), "[P%d] BAD", jugador);
+            game_log(LOG_INFO, msg, 0);
             n->activa = false;
             break;
         }
@@ -297,60 +318,102 @@ void evaluar_golpe(int carril_presionado, eventos_globales *ev_gl)
 void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
 {
 	int carril_presionado = -1;
+	int jugador = -1;
+
 	/* Carriles P1 */
-	if (evento.key.keysym.sym == SDLK_h) carril_presionado = 0;
-	else if (evento.key.keysym.sym == SDLK_j) carril_presionado = 1;
-	else if (evento.key.keysym.sym == SDLK_k) carril_presionado = 2;
-	else if (evento.key.keysym.sym == SDLK_l) carril_presionado = 3;
+	if (evento.key.keysym.sym == SDLK_h)      { carril_presionado = 0; jugador = 1; }
+	else if (evento.key.keysym.sym == SDLK_j) { carril_presionado = 1; jugador = 1; }
+	else if (evento.key.keysym.sym == SDLK_k) { carril_presionado = 2; jugador = 1; }
+	else if (evento.key.keysym.sym == SDLK_l) { carril_presionado = 3; jugador = 1; }
 
 	/* Carriles P2 */
-	else if (evento.key.keysym.sym == SDLK_q) carril_presionado = 4;
-	else if (evento.key.keysym.sym == SDLK_w) carril_presionado = 5;
-	else if (evento.key.keysym.sym == SDLK_e) carril_presionado = 6;
-	else if (evento.key.keysym.sym == SDLK_r) carril_presionado = 7;
+	else if (evento.key.keysym.sym == SDLK_q) { carril_presionado = 4; jugador = 2; }
+	else if (evento.key.keysym.sym == SDLK_w) { carril_presionado = 5; jugador = 2; }
+	else if (evento.key.keysym.sym == SDLK_e) { carril_presionado = 6; jugador = 2; }
+	else if (evento.key.keysym.sym == SDLK_r) { carril_presionado = 7; jugador = 2; }
 
 	if (carril_presionado != -1)
-	  evaluar_golpe(carril_presionado, ev_gl);
+		evaluar_golpe(carril_presionado, jugador, ev_gl);
 }
+
 
 
 void manejo_mando(eventos_globales *ev_gl,  SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	if (evento.type == SDL_CONTROLLERDEVICEADDED) 
 	{
-		if (ev_gl->mando_p1 == NULL)
+		SDL_GameController *mando_temporal = SDL_GameControllerOpen(evento.cdevice.which);
+		if (mando_temporal) 
 		{
-			ev_gl->mando_p1 = SDL_GameControllerOpen(evento.cdevice.which);
-			if (ev_gl->mando_p1)
+			const char *nombre = SDL_GameControllerName(mando_temporal);
+
+			if (nombre && strstr(nombre, "Microntek") != NULL) 
 			{
-				game_log(LOG_INFO, "Mando 1 conectado", SDL_GameControllerName(ev_gl->mando_p1));
-				game_log(LOG_DEBUG, "Mando 1 conectado %s", SDL_GameControllerName(ev_gl->mando_p1));
+				if (ev_gl->mando_p1 == NULL)
+				{
+				ev_gl->mando_p1 = mando_temporal;
+				game_log(LOG_INFO, "Alfombra asignada a Jugador 1", nombre);
+				} else {
+					SDL_GameControllerClose(mando_temporal);
+				}
+			} 
+			else 
+			{
+				if (ev_gl->mando_p2 == NULL)
+				{
+					ev_gl->mando_p2 = mando_temporal;
+					game_log(LOG_INFO, "Mando convencional asignado a Jugador 2", nombre);
+				} else {
+					SDL_GameControllerClose(mando_temporal);
+				}
 			}
 		}
-	} else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) 
+	} 
+	else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) 
+	{
+		SDL_GameController *mando_desconectado = SDL_GameControllerFromInstanceID(evento.cdevice.which);
+		if (ev_gl->mando_p1 == mando_desconectado)
 		{
-			SDL_GameController *mando_desconectado = SDL_GameControllerFromInstanceID(evento.cdevice.which);
-			if (ev_gl->mando_p1 == mando_desconectado)
-			{
-				SDL_GameControllerClose(ev_gl->mando_p1);
-				ev_gl->mando_p1 = NULL;
-				game_log(LOG_INFO, "Mando P1 desconectado", 0);
-			}
+			SDL_GameControllerClose(ev_gl->mando_p1);
+			ev_gl->mando_p1 = NULL;
+			game_log(LOG_INFO, "Alfombra del Jugador 1 desconectada", 0);
+		}
+		else if (ev_gl->mando_p2 == mando_desconectado)
+		{
+				SDL_GameControllerClose(ev_gl->mando_p2);
+			ev_gl->mando_p2 = NULL;
+				game_log(LOG_INFO, "Mando del Jugador 2 desconectado", 0);
+		}
 	}
-if (evento.type == SDL_CONTROLLERBUTTONDOWN)
+
+	if (evento.type == SDL_CONTROLLERBUTTONDOWN)
 	{
 		if (ev_gl->estado_juego == ESTADO_JUEGO)
 			botones_mando_juego_principal(ev_gl, evento, rec_menu);
 		else if (ev_gl->estado_juego == ESTADO_MENU)
-			botones_mando_menu_principal(ev_gl, evento, rec_menu); /* Invocación para el menú */
+			botones_mando_menu_principal(ev_gl, evento, rec_menu);
 	}
 }
+
 
 void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 
-	int carril_presionado = -1;
 
+	int carril_presionado = -1;
+	int offset_carril = -1;
+	int jugador = -1;
+
+	if (ev_gl->mando_p1 && evento.cbutton.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(ev_gl->mando_p1))) {
+		offset_carril = 0;
+		jugador = 1;
+	} 
+	else if (ev_gl->mando_p2 && evento.cbutton.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(ev_gl->mando_p2))) {
+		offset_carril = 4;
+		jugador = 2;
+	}
+
+    if (offset_carril == -1) return;
 	switch (evento.cbutton.button) 
 	{
 		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
@@ -378,9 +441,8 @@ void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, me
 		case SDL_CONTROLLER_BUTTON_B:         
 			carril_presionado = 3; 
 	}
-
 	if (carril_presionado != -1)
-		evaluar_golpe(carril_presionado, ev_gl);
+	        evaluar_golpe(carril_presionado + offset_carril,jugador, ev_gl);
 	
 }
 

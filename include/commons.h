@@ -60,15 +60,15 @@ typedef struct {
 	TTF_Font *fuente;
 
 	SDL_Texture* textura_titulo;
-   int titulo_w, titulo_h;
+	int titulo_w, titulo_h;
 	SDL_Texture *sprites;
 
 	float scroll_camino;
-   float scroll_edificios;
-    
-   float vel_camino;
+	float scroll_edificios;
 
-   float vel_edificios;
+	float vel_camino;
+
+	float vel_edificios;
 	//SDL_Surface *surfaceTexto;
 	//SDL_Texture *texturaTexto;
 	SDL_Color color1;
@@ -83,15 +83,15 @@ typedef struct {
 /*--------------------------------------------------------------*/
 /* Logica de juego */
 typedef enum {
-    NOTA_SIMPLE,
-    NOTA_LARGA
+	NOTA_SIMPLE,
+	NOTA_LARGA
 } TIPO_NOTA;
 
 typedef enum {
-    NOTA_ESPERANDO,   /* sigue bajando */
-    NOTA_MANTENIDA,   /* el jugador continua presionando */
-    NOTA_GOLPEADA,    /* acertada */
-    NOTA_FALLADA      /* pasa de largo */
+	NOTA_ESPERANDO,   /* sigue bajando */
+	NOTA_MANTENIDA,   /* el jugador continua presionando */
+	NOTA_GOLPEADA,    /* acertada */
+	NOTA_FALLADA      /* pasa de largo */
 } ESTADO_NOTA;
 
 /* TODO: carriles de notas
@@ -127,14 +127,14 @@ typedef struct {
 
 /* eventos y estados globables (requeridos por todo el juego) */
 typedef enum {
-    ESTADO_MENU,
-	 ESTADO_PAUSA,
-	 ESTADO_CARGA,
-	 ESTADO_SELECT_TIPO_PARTIDA,
-	 ESTADO_SELECT_NIVELES,
-    ESTADO_JUEGO,
-    ESTADO_GAMEOVER,
-	 ESTADO_SALIR,
+	ESTADO_MENU,
+	ESTADO_PAUSA,
+	ESTADO_CARGA,
+	ESTADO_SELECT_TIPO_PARTIDA,
+	ESTADO_SELECT_NIVELES,
+	ESTADO_JUEGO,
+	ESTADO_GAMEOVER,
+	ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
 
@@ -150,10 +150,12 @@ typedef struct {
 
 	menu_principal_recursos rec_menu;
 	float iris_radius;
-   bool is_iris_fading_out;
-   MapaCancion mapa_actual;
+	bool is_iris_fading_out;
+	MapaCancion mapa_actual;
+
 	
 	SDL_GameController *mando_p1;
+	SDL_GameController *mando_p2;
 } eventos_globales;
 
 /* -------------------------------------------------- */

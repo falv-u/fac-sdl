@@ -67,8 +67,16 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 
 		n->y_actual = Y_JUEZ - (velocidad * tiempo_restante);
 
-		if ((tiempo_restante + n->duracion) < -VENTANA_MISS) {
+		if ((tiempo_restante + n->duracion) < -VENTANA_MISS)
+		{
 			n->activa = false;
-			game_log(LOG_INFO, "MISS - Nota perdida", 0);
-		}
-	}}
+
+			/* Deducir el jugador según la posición lógica del carril */
+			int jugador_miss = (n->carril < 4) ? 1 : 2;
+			char msg[64];
+
+			snprintf(msg, sizeof(msg), "[P%d] MISS - Nota perdida", jugador_miss);
+			game_log(LOG_INFO, msg, 0);
+        	}
+	}
+}

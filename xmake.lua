@@ -6,13 +6,22 @@ set_languages("c11")
 
 add_rules("mode.debug", "mode.release")
 
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "."})
+
+if is_plat("linux") then
+    add_requires("libsdl2",       {system = true, configs = {sysconfig = {pc = "sdl2"}}})
+    add_requires("libsdl2_ttf",   {system = true, configs = {sysconfig = {pc = "SDL2_ttf"}}})
+    add_requires("libsdl2_image", {system = true, configs = {sysconfig = {pc = "SDL2_image"}}})
+    add_requires("libsdl2_mixer", {system = true, configs = {sysconfig = {pc = "SDL2_mixer"}}})
+end
+
 target("game")
     set_kind("binary")
     add_includedirs("include")
     
     add_files("src/*.c")
 
-    if is_plat("freebsd") or is_plat("bsd") then
+    if is_plat("freebsd", "bsd") then
         add_sysincludedirs("/usr/local/include", "/usr/local/include/SDL2")
         add_linkdirs("/usr/local/lib")
         set_targetdir("freebsd")
@@ -20,13 +29,7 @@ target("game")
     end
 
     if is_plat("linux") then
-        add_requires("libsdl2",       {system = true, configs = {sysconfig = {pc = "sdl2"}}})
-        add_requires("libsdl2_ttf",   {system = true, configs = {sysconfig = {pc = "SDL2_ttf"}}})
-        add_requires("libsdl2_image", {system = true, configs = {sysconfig = {pc = "SDL2_image"}}})
-        add_requires("libsdl2_mixer", {system = true, configs = {sysconfig = {pc = "SDL2_mixer"}}})
-        
         add_packages("libsdl2", "libsdl2_ttf", "libsdl2_image", "libsdl2_mixer")
-
         set_targetdir("linux")
     end
 
@@ -43,8 +46,3 @@ target("game")
             set_policy("build.sanitizer.undefined", true)
         end
     end
-
-after_config(function ()
-    import("core.project.project")
-    project.export("compile_commands")
-end)

@@ -94,25 +94,37 @@ int main(void)
 
 	}
 
-	if (ev_gl.mando_p1 != NULL) 
-	{
+	if (ev_gl.mando_p1 != NULL) {
 		SDL_GameControllerClose(ev_gl.mando_p1);
-	   	ev_gl.mando_p1 = NULL;
+		ev_gl.mando_p1 = NULL;
+	}
+	if (ev_gl.mando_p2 != NULL) {
+		SDL_GameControllerClose(ev_gl.mando_p2);
+		ev_gl.mando_p2 = NULL;
 	}
 
-
-	if (ev_gl.mando_p2 != NULL) 
-	{
-		SDL_GameControllerClose(ev_gl.mando_p1);
-	   	ev_gl.mando_p2 = NULL;
+	if (ev_gl.mapa_actual.arreglo_notas != NULL) {
+		free(ev_gl.mapa_actual.arreglo_notas);
+		ev_gl.mapa_actual.arreglo_notas = NULL;
 	}
-	SDL_DestroyWindow(ev_gl.ventana);
+
+	if (rec_menu.textura_titulo) SDL_DestroyTexture(rec_menu.textura_titulo);
+	if (rec_menu.sprites) SDL_DestroyTexture(rec_menu.sprites);
+	if (rec_menu.fuente) TTF_CloseFont(rec_menu.fuente);
+	if (rec_menu.sfx_opcion) Mix_FreeChunk(rec_menu.sfx_opcion);
+
 	Mix_HaltMusic();
-	Mix_FreeMusic(rec_menu.musica_fondo);
-
+	if (rec_menu.musica_fondo) Mix_FreeMusic(rec_menu.musica_fondo);
 	Mix_CloseAudio();
+
+	if (ev_gl.renderizado) SDL_DestroyRenderer(ev_gl.renderizado);
+	if (ev_gl.ventana) SDL_DestroyWindow(ev_gl.ventana);
+
 	Mix_Quit();
+	TTF_Quit();
+	IMG_Quit(); 
 	SDL_Quit();
+
 	return 0;
 }
 

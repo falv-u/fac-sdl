@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 /* librerias sistema no estandar */
 /* headers propios */
@@ -33,6 +35,7 @@ void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, men
 
 int main(void)
 {
+	srand(time(NULL));
 	eventos_globales ev_gl;
 	menu_principal_recursos rec_menu;
 	

@@ -135,7 +135,7 @@ MapaCancion cargar_nivel(const char *ruta_archivo)
                 int candidato;
                 while (1) {
 						 /* funcion rara encontrada en foro, estudiar mas tarde */
-                    candidato = arc4random_uniform(8); /* 0 a 7,  */
+                    candidato = rand() % 8; /* 0 a 7  */
                     int choca = 0;
                     
                     /* Revisar hacia atrás si el carril candidato está ocupado */

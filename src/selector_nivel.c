@@ -8,6 +8,7 @@
 #include <time.h>
 #include <SDL_ttf.h>
 #include "generador_niveles.h"
+
 void listar_niveles(void);
 void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada);
 
@@ -147,12 +148,19 @@ void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada)
 
             fgets(ev_gl->playlist.portadas[i], 512, fm);
             ev_gl->playlist.portadas[i][strcspn(ev_gl->playlist.portadas[i], "\n")] = 0;
+
+            if (fgets(ev_gl->playlist.rutas_audio[i], 512, fm)) {
+                ev_gl->playlist.rutas_audio[i][strcspn(ev_gl->playlist.rutas_audio[i], "\n")] = 0;
+            } else {
+                strcpy(ev_gl->playlist.rutas_audio[i], "");
+            }
             fclose(fm);
         } else {
-            strcpy(ev_gl->playlist.titulos[i], "Desconocido");
-            ev_gl->playlist.duraciones[i] = 0.0f;
-            strcpy(ev_gl->playlist.portadas[i], "");
-        }
+                strcpy(ev_gl->playlist.titulos[i], "Desconocido");
+                ev_gl->playlist.duraciones[i] = 0.0f;
+                strcpy(ev_gl->playlist.portadas[i], "");
+                strcpy(ev_gl->playlist.rutas_audio[i], "");
+            }
     }
 }
 

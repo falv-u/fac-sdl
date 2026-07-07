@@ -53,6 +53,7 @@ int main(void)
 	        }
 	    }
 	}
+
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	while (ev_gl.corriendo)
@@ -177,6 +178,8 @@ void iniciar_eventos_globales(eventos_globales *ev_gl)
 	ev_gl->is_iris_fading_out = false;
 	ev_gl->mando_p1 = NULL;
 	ev_gl->mando_p2 = NULL;
+	ev_gl->opcion_dificultad = 0;
+	ev_gl->musica_nivel_actual = NULL;
 	SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 
 }
@@ -286,16 +289,27 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 				        generar_playlist_aleatoria(ev_gl, ev_gl->opcion_dificultad + 1);
 
 				        if (ev_gl->playlist.modo_playlist && ev_gl->playlist.cantidad > 0) {
-				            /* Cargar la primera canción de la tanda aleatoria */
 				            ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
 				            ev_gl->tiempo_juego = 0.0f;
 				            ev_gl->estado_juego = ESTADO_JUEGO;
 				            game_log(LOG_INFO, "Iniciando partida aleatoria.", 0);
+
+				            if (ev_gl->musica_nivel_actual != NULL) {
+				                Mix_HaltMusic();
+				                Mix_FreeMusic(ev_gl->musica_nivel_actual);
+				            }
+				            ev_gl->musica_nivel_actual = Mix_LoadMUS(ev_gl->playlist.rutas_audio[0]);
+				            if (ev_gl->musica_nivel_actual) {
+				                Mix_PlayMusic(ev_gl->musica_nivel_actual, 0); /* 0 denota cero repeticiones */
+				            } else {
+				                game_log(LOG_ERROR, "No se pudo cargar audio P1", Mix_GetError());
+				            }
+
 				        } else {
 				            ev_gl->estado_juego = ESTADO_MENU; /* Resguardo si la carpeta está vacía */
 				        }
-    }
-}
+				    }
+				}
 			}
 		}
 

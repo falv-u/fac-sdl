@@ -144,6 +144,7 @@ typedef struct {
     char titulos[MAX_CANCIONES_PLAYLIST][256];      
     float duraciones[MAX_CANCIONES_PLAYLIST];        
     char portadas[MAX_CANCIONES_PLAYLIST][512];
+    char rutas_audio[MAX_CANCIONES_PLAYLIST][512];
     int cantidad;          
     int actual;            
     bool modo_playlist;    
@@ -165,6 +166,7 @@ typedef struct {
 	MapaCancion mapa_actual;
 
 	PlaylistDificultad playlist;
+	Mix_Music *musica_nivel_actual;
   int opcion_dificultad;
 	
 	SDL_GameController *mando_p1;

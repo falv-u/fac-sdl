@@ -63,6 +63,18 @@ int procesar_cancion_y_metadatos(const char *ruta_audio, int id_nivel, int dific
          return -1;
     }
 
+    char ruta_meta[512];
+    snprintf(ruta_meta, sizeof(ruta_meta), "./niveles/nivel%d_meta.txt", id_nivel);
+    FILE *f_meta = fopen(ruta_meta, "w");
+    if (f_meta) {
+        fprintf(f_meta, "%s\n", meta_salida->titulo);
+        fprintf(f_meta, "%f\n", meta_salida->duracion);
+        fprintf(f_meta, "%s\n", meta_salida->ruta_portada);
+        fprintf(f_meta, "%s\n", ruta_audio); /* Se inyecta la ruta origen del audio */
+        fclose(f_meta);
+    } else {
+        game_log(LOG_ERROR, "No se pudo escribir el archivo de metadatos", ruta_meta);
+    }
     game_log(LOG_INFO, "Metadatos y niveles procesados exitosamente", meta_salida->titulo);
     return 0;
 }

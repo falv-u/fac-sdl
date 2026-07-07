@@ -178,7 +178,25 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		                ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[ev_gl->playlist.actual]);
 		                ev_gl->tiempo_juego = 0.0f;
 		                game_log(LOG_INFO, "Cargando siguiente mapa de la playlist aleatoria.", 0);
+		                /* carga musica */
+		                if (ev_gl->musica_nivel_actual != NULL)
+		                {
+		                    Mix_HaltMusic();
+		                    Mix_FreeMusic(ev_gl->musica_nivel_actual);
+		                }
+		                ev_gl->musica_nivel_actual = Mix_LoadMUS(ev_gl->playlist.rutas_audio[ev_gl->playlist.actual]);
+		                if (ev_gl->musica_nivel_actual)
+		                {
+		                    Mix_PlayMusic(ev_gl->musica_nivel_actual, 0);
+		                } else {
+		                    game_log(LOG_ERROR, "Fallo al cargar audio del siguiente nivel", Mix_GetError());
+		                }
 		            } else {
+			            	if (ev_gl->musica_nivel_actual != NULL) {
+		                    Mix_HaltMusic();
+		                    Mix_FreeMusic(ev_gl->musica_nivel_actual);
+		                    ev_gl->musica_nivel_actual = NULL;
+		                }
 		                ev_gl->playlist.modo_playlist = false;
 		                ev_gl->estado_juego = ESTADO_MENU;
 		                game_log(LOG_INFO, "¡Partida aleatoria completada exitosamente!", 0);

@@ -16,15 +16,41 @@ float calcular_magnitud(kiss_fft_cpx c);
 
 int main(int argc, char **argv)
 {
-	if (argc < 2) {
-	fprintf(stderr, "Uso: %s <archivo.ogg> [multiplicador_umbral] [energia_minima]\n", argv[0]);
-	fprintf(stderr, "Ejemplo: %s cancion.ogg 1.8 0.5 > niveles/nivel1.txt\n", argv[0]);
-	return 1;
+	if (argc < 3) {
+	    fprintf(stderr, "Uso: %s <archivo.ogg> <dificultad_1_a_3>\n", argv[0]);
+	    fprintf(stderr, "Ejemplo: %s cancion.ogg 3 > niveles/nivel1_diff3.txt\n", argv[0]);
+	    return 1;
 	}
 
-	float multiplicador_umbral = (argc >= 3) ? atof(argv[2]) : 1.8f;
-	float energia_minima = (argc >= 4) ? atof(argv[3]) : 0.5f;
+	int dificultad = atoi(argv[2]);
+	float multiplicador_umbral;
+	float energia_minima;
+	int cooldown_actual_frames;
 
+	switch(dificultad)
+	{
+		case 1: /* Fácil: umbrales altos, cooldown largo */
+			multiplicador_umbral = 2.2f;
+			energia_minima = 0.7f;
+			cooldown_actual_frames = 8;
+			break;
+		case 2: /* Normal */
+			multiplicador_umbral = 1.8f;
+			energia_minima = 0.5f;
+			cooldown_actual_frames = 4;
+			break;
+		case 3: /* Difícil: captura más picos, cooldown muy bajo */
+			multiplicador_umbral = 1.4f;
+			energia_minima = 0.3f;
+			cooldown_actual_frames = 2;
+			break;
+		default:
+			fprintf(stderr, "Dificultad no soportada. Usando Normal (2).\n");
+			multiplicador_umbral = 1.8f;
+			energia_minima = 0.5f;
+			cooldown_actual_frames = 4;
+			break;
+	}
 	int canales, frecuencia_muestreo;
 	short *audio_pcm;
 

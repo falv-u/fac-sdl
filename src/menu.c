@@ -1,7 +1,7 @@
 #include "SDL_events.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
-
+#include "SDL_image.h"
 #include "commons.h"
 
 void renderizar_fractales(eventos_globales ev_gl);
@@ -11,6 +11,9 @@ void fade_iris_out(eventos_globales *ev_gl);
 void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
 void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+
+ESTADO_ACTUAL pantalla_carga(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento; /* para eliminar warning, no relevante */
@@ -200,4 +203,50 @@ void pintar_gradiente_noche_menu(SDL_Renderer *render)
 
 	/* Renderizado de geometría sin textura (NULL) para usar solo color */
 	SDL_RenderGeometry(render, NULL, vertices, 4, indices, 6);
+}
+
+ESTADO_ACTUAL pantalla_carga(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+{
+    SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
+    SDL_RenderClear(ev_gl->renderizado);
+
+    int idx = ev_gl->playlist.actual;
+    char *ruta_portada = ev_gl->playlist.portadas[idx];
+    char *titulo = ev_gl->playlist.titulos[idx];
+    float duracion = ev_gl->playlist.duraciones[idx];
+
+    SDL_Texture *tex_portada = IMG_LoadTexture(ev_gl->renderizado, ruta_portada);
+    if (tex_portada) {
+        SDL_Rect dest_portada = { (ANCHO_PANTALLA / 2) - 150, (LARGO_PANTALLA / 2) - 200, 300, 300 };
+        SDL_RenderCopy(ev_gl->renderizado, tex_portada, NULL, &dest_portada);
+        SDL_DestroyTexture(tex_portada);
+    }
+
+    if (rec_menu->fuente) {
+        SDL_Color blanco = {255, 255, 255, 255};
+        char buffer_duracion[32];
+        snprintf(buffer_duracion, sizeof(buffer_duracion), "Duracion: %d:%02d", (int)(duracion / 60), (int)duracion % 60);
+
+        SDL_Surface *surf_tit = TTF_RenderText_Solid(rec_menu->fuente, titulo, blanco);
+        SDL_Surface *surf_dur = TTF_RenderText_Solid(rec_menu->fuente, buffer_duracion, blanco);
+
+        if (surf_tit && surf_dur) {
+            SDL_Texture *tex_tit = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_tit);
+            SDL_Texture *tex_dur = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_dur);
+
+            SDL_Rect rect_tit = { (ANCHO_PANTALLA / 2) - (surf_tit->w / 2), (LARGO_PANTALLA / 2) + 120, surf_tit->w, surf_tit->h };
+            SDL_Rect rect_dur = { (ANCHO_PANTALLA / 2) - (surf_dur->w / 2), (LARGO_PANTALLA / 2) + 180, surf_dur->w, surf_dur->h };
+
+            SDL_RenderCopy(ev_gl->renderizado, tex_tit, NULL, &rect_tit);
+            SDL_RenderCopy(ev_gl->renderizado, tex_dur, NULL, &rect_dur);
+
+            SDL_DestroyTexture(tex_tit);
+            SDL_DestroyTexture(tex_dur);
+            SDL_FreeSurface(surf_tit);
+            SDL_FreeSurface(surf_dur);
+        }
+    }
+
+    SDL_RenderPresent(ev_gl->renderizado);
+    return ESTADO_CARGA;
 }

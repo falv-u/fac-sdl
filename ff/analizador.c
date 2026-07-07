@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 
 #include "kiss_fftr.h"
@@ -11,6 +10,9 @@
 #define HISTORIAL_MAX 43 
 
 #define COOLDOWN_FRAMES 4 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 float calcular_magnitud(kiss_fft_cpx c);
 
 
@@ -116,7 +118,7 @@ int main(int argc, char **argv)
 				{
 					float tiempo_segundos = (float)(f * TAMANO_FRAME) / frecuencia_muestreo;
 					printf("%.3f;0.00;-1\n", tiempo_segundos);
-					cooldown_actual = COOLDOWN_FRAMES;
+					cooldown_actual = cooldown_actual_frames;
 				}
 			}
 

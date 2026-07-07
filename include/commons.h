@@ -20,6 +20,8 @@
 
 /* Macros */
 
+#define MAX_CANCIONES_PLAYLIST 4
+
 /* Delta Time */
 #define FPS 30
 #define TARGET_FPS      60
@@ -137,6 +139,15 @@ typedef enum {
 	ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
+typedef struct {
+    char rutas[MAX_CANCIONES_PLAYLIST][512];
+    char titulos[MAX_CANCIONES_PLAYLIST][256];      
+    float duraciones[MAX_CANCIONES_PLAYLIST];        
+    char portadas[MAX_CANCIONES_PLAYLIST][512];
+    int cantidad;          
+    int actual;            
+    bool modo_playlist;    
+} PlaylistDificultad;
 
 typedef struct {
 	SDL_Window *ventana;
@@ -153,10 +164,13 @@ typedef struct {
 	bool is_iris_fading_out;
 	MapaCancion mapa_actual;
 
+	PlaylistDificultad playlist;
+  int opcion_dificultad;
 	
 	SDL_GameController *mando_p1;
 	SDL_GameController *mando_p2;
 } eventos_globales;
+
 
 /* -------------------------------------------------- */
 
@@ -170,7 +184,8 @@ void assets_load(void);
 
 /* primitivas de ESTADO_JUEGO*/
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
-ESTADO_ACTUAL seleccionar_niveles(void);
+ESTADO_ACTUAL seleccionar_niveles(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada);
 ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento);
 
 /* primitivas de selector de niveles */

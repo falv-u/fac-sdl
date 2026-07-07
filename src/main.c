@@ -77,7 +77,7 @@ int main(void)
 				case ESTADO_SELECT_TIPO_PARTIDA:
 					break;
 				case ESTADO_SELECT_NIVELES:
-					ev_gl.estado_juego=seleccionar_niveles();
+					ev_gl.estado_juego = seleccionar_niveles(&ev_gl, &rec_menu);
 					break;
 				case ESTADO_JUEGO:
 					ev_gl.estado_juego=juego_principal(&ev_gl, &evento);
@@ -255,7 +255,7 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 							Mix_PlayMusic(rec_menu->musica_fondo, -1);
 
 						if (rec_menu->opcion == 0)
-							ev_gl->is_iris_fading_out = true;
+							ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
 						if (rec_menu->opcion == 1)
 							ev_gl->estado_juego = ESTADO_SALIR;
 						if (rec_menu->opcion == 2)
@@ -263,9 +263,39 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 					}
 				}
 				else if (ev_gl->estado_juego == ESTADO_JUEGO)
-            			{
-			                teclas_juego_principal(ev_gl, evento);
-        			}
+        {
+			    teclas_juego_principal(ev_gl, evento);
+        }
+				else if (ev_gl->estado_juego == ESTADO_SELECT_NIVELES)
+				{
+				    if (evento.key.keysym.sym == SDLK_UP && ev_gl->opcion_dificultad > 0)
+				    {
+				        ev_gl->opcion_dificultad--;
+				        if (rec_menu->sfx_opcion) Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+				    }
+				    if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->opcion_dificultad < 2)
+				    {
+				        ev_gl->opcion_dificultad++;
+				        if (rec_menu->sfx_opcion) Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+				    }
+				    if (evento.key.keysym.sym == SDLK_ESCAPE) {
+				        ev_gl->estado_juego = ESTADO_MENU; /* Volver al menú principal */
+				    }
+				    if (evento.key.keysym.sym == SDLK_RETURN) {
+				        /* Dificultad mapea a 1, 2 o 3 */
+				        generar_playlist_aleatoria(ev_gl, ev_gl->opcion_dificultad + 1);
+
+				        if (ev_gl->playlist.modo_playlist && ev_gl->playlist.cantidad > 0) {
+				            /* Cargar la primera canción de la tanda aleatoria */
+				            ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
+				            ev_gl->tiempo_juego = 0.0f;
+				            ev_gl->estado_juego = ESTADO_JUEGO;
+				            game_log(LOG_INFO, "Iniciando partida aleatoria.", 0);
+				        } else {
+				            ev_gl->estado_juego = ESTADO_MENU; /* Resguardo si la carpeta está vacía */
+				        }
+    }
+}
 			}
 		}
 
@@ -413,8 +443,6 @@ void manejo_mando(eventos_globales *ev_gl,  SDL_Event evento, menu_principal_rec
 
 void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
-
-
 	int carril_presionado = -1;
 	int offset_carril = -1;
 	int jugador = -1;

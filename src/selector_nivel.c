@@ -206,6 +206,7 @@ ESTADO_ACTUAL seleccionar_niveles(eventos_globales *ev_gl, menu_principal_recurs
     SDL_RenderPresent(ev_gl->renderizado);
     return ESTADO_SELECT_NIVELES;
 }
+
 void sincronizar_biblioteca_audio(void)
 {
     DIR *dir;

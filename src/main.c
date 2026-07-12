@@ -33,6 +33,9 @@ void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recu
 void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 
+bool es_alfombra_de_baile(SDL_GameController *mando);
+MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
+
 int main(void)
 {
 	srand(time(NULL));
@@ -289,7 +292,10 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 				        generar_playlist_aleatoria(ev_gl, ev_gl->opcion_dificultad + 1);
 
 				        if (ev_gl->playlist.modo_playlist && ev_gl->playlist.cantidad > 0) {
-				            ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
+				            if (es_alfombra_de_baile(ev_gl->mando_p1))
+				                ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[0], 0, 3);
+				            else
+				                ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
 				            ev_gl->tiempo_juego = 0.0f;
 				            ev_gl->estado_juego = ESTADO_JUEGO;
 				            game_log(LOG_INFO, "Iniciando partida aleatoria.", 0);

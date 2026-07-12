@@ -2,14 +2,23 @@
 #include "log.h"
 #include <SDL_image.h>
 #include <dirent.h>
+#include <string.h>
 #define VENTANA_PERFECT 0.05f /* 50 milisegundos de tolerancia */
 #define VENTANA_GOOD    0.10f /* 100 milisegundos */
 #define VENTANA_MISS    0.20f /* 200 milisegundos */
+
+/* Tiempo minimo que un pie necesita para levantarse de un panel y estar
+   listo para pisar el siguiente, en segundos. Ajustar para hacer la
+   humanizacion mas o menos permisiva. */
+#define TIEMPO_RECUPERACION_PASO 0.20f
 
 void actualizar_notas(float dt, eventos_globales *ev_gl);
 void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 
 MapaCancion cargar_nivel(const char *ruta_archivo);
+bool es_alfombra_de_baile(SDL_GameController *mando);
+void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carril_hasta);
+MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
 
 void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
@@ -118,6 +127,68 @@ MapaCancion cargar_nivel(const char *ruta_archivo)
     return mapa;
 }
 
+bool es_alfombra_de_baile(SDL_GameController *mando)
+{
+    if (mando == NULL) return false;
+
+    const char *nombre = SDL_GameControllerName(mando);
+    return (nombre != NULL && strstr(nombre, "Microntek") != NULL);
+}
+
+/* Humaniza un mapa ya cargado, dentro del rango de carriles indicado
+   (por ejemplo 0-3 para P1, 4-7 para P2)
+
+   La idea es simular que el jugador solo dispone de DOS pies: cada nota se
+   modela como "pisar" y cada pie, una vez usado, necesita
+   TIEMPO_RECUPERACION_PASO segundos para volver a estar disponible (y si la
+   nota es larga, el pie queda ocupado durante toda su duracion). Si cuando
+   llega una nota ningun pie esta libre todavia, la nota se descarta
+   (activa = false) en vez de dejarla imposible de tocar. */
+   
+void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carril_hasta)
+{
+    if (mapa == NULL || mapa->arreglo_notas == NULL) return;
+
+    float pie_a_libre_en = -999.0f;
+    float pie_b_libre_en = -999.0f;
+
+    for (int i = 0; i < mapa->total_notas; i++)
+    {
+        Nota *n = &mapa->arreglo_notas[i];
+
+        if (n->carril < carril_desde || n->carril > carril_hasta) continue;
+        if (n->activa == false) continue;
+
+        float fin_ocupacion = (n->duracion > 0.0f) ? (n->tiempo_golpe + n->duracion) : n->tiempo_golpe;
+
+        /* Elegimos el pie que quede libre primero */
+        float pie_disponible = (pie_a_libre_en <= pie_b_libre_en) ? pie_a_libre_en : pie_b_libre_en;
+
+        if (n->tiempo_golpe < pie_disponible + TIEMPO_RECUPERACION_PASO)
+        {
+            /* Ningun pie alcanza a llegar a tiempo: se descarta la nota */
+            n->activa = false;
+            continue;
+        }
+
+        /* Asignamos la nota al pie que estaba libre y lo dejamos ocupado */
+        if (pie_a_libre_en <= pie_b_libre_en)
+            pie_a_libre_en = fin_ocupacion + TIEMPO_RECUPERACION_PASO;
+        else
+            pie_b_libre_en = fin_ocupacion + TIEMPO_RECUPERACION_PASO;
+    }
+}
+
+/* Carga un nivel igual que cargar_nivel(), pero aplica la humanizacion
+   sobre el rango de carriles indicado antes de devolverlo. Se deja
+   cargar_nivel() intacta para no afectar el modo con mando/teclado normal. */
+MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta)
+{
+    MapaCancion mapa = cargar_nivel(ruta_archivo);
+    humanizar_mapa_para_alfombra(&mapa, carril_desde, carril_hasta);
+    return mapa;
+}
+
 void actualizar_notas(float dt, eventos_globales *ev_gl)
 {
 	ev_gl->tiempo_juego += dt;
@@ -148,7 +219,7 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		{
 			n->activa = false;
 
-			/* Deducir el jugador según la posición lógica del carril */
+			/* Deducir el jugador según la posición logica del carril */
 			int jugador_miss = (n->carril < 4) ? 1 : 2;
 			char msg[64];
 
@@ -175,9 +246,13 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		            ev_gl->playlist.actual++;
 
 		            if (ev_gl->playlist.actual < ev_gl->playlist.cantidad) {
-		                ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[ev_gl->playlist.actual]);
+		                if (es_alfombra_de_baile(ev_gl->mando_p1))
+		                    ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[ev_gl->playlist.actual], 0, 3);
+		                else
+		                    ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[ev_gl->playlist.actual]);
 		                ev_gl->tiempo_juego = 0.0f;
 		                game_log(LOG_INFO, "Cargando siguiente mapa de la playlist aleatoria.", 0);
+
 		                /* carga musica */
 		                if (ev_gl->musica_nivel_actual != NULL)
 		                {

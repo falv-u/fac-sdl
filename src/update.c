@@ -1,4 +1,5 @@
 #include "commons.h"
+#include "ranking.h"
 #include "log.h"
 #include <SDL_image.h>
 #include <dirent.h>
@@ -8,9 +9,8 @@
 #define VENTANA_MISS    0.20f /* 200 milisegundos */
 
 /* Tiempo minimo que un pie necesita para levantarse de un panel y estar
-   listo para pisar el siguiente, en segundos. Ajustar para hacer la
-   humanizacion mas o menos permisiva. */
-#define TIEMPO_RECUPERACION_PASO 0.20f
+   listo para pisar el siguiente, en segundos */
+#define TIEMPO_RECUPERACION_PASO 0.08f
 
 void actualizar_notas(float dt, eventos_globales *ev_gl);
 void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
@@ -35,16 +35,39 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 	switch (ev_gl->estado_juego)
 	{
 		case ESTADO_MENU:
-			rec_menu->scroll_edificios -= rec_menu->vel_edificios * dt;
+      ev_gl->tiempo_juego += dt;
 
-			if (rec_menu->scroll_edificios <= -(8*64*ESCALADO_1)) 
-				rec_menu->scroll_edificios += (8*64*ESCALADO_1); 
+      rec_menu->scroll_edificios -= rec_menu->vel_edificios * dt;
+
+      if (rec_menu->scroll_edificios <= -(8*64*ESCALADO_1)) 
+        rec_menu->scroll_edificios += (8*64*ESCALADO_1);
 			break;
 
 		case ESTADO_JUEGO:
+			if (ev_gl->tiempo_juego >= TIEMPO_APROXIMACION && ev_gl->musica_iniciada == false)
+      {
+          if (ev_gl->musica_nivel_actual != NULL)
+              Mix_PlayMusic(ev_gl->musica_nivel_actual, 0);
+            
+          ev_gl->musica_iniciada = true;
+      }
+
 			actualizar_notas(dt, ev_gl);
+			actualizar_ki_y_tiempo(ev_gl, dt);
+      for (int i = 0; i < 2; i++)
+			{
+				jugador *p = &ev_gl->jugadores[i];
+				if (p->intensidad_pared > 0.0f)
+				{
+					p->intensidad_pared -= 3.0f * dt;
+					if (p->intensidad_pared < 0.0f) 
+					p->intensidad_pared = 0.0f;
+				}
+			}
 			break;
+
 		default:
+  		game_log(LOG_ERROR,"ALGO TERRIBLE HA PASADO, EL ESTADO DEL JUEGO ES INDEFINIDO" , NULL);
 			break;
 	
 	}
@@ -80,6 +103,7 @@ MapaCancion cargar_nivel(const char *ruta_archivo)
         
         if (sscanf(linea, "%f;%f;%d", &t_golpe, &duracion, &carril) == 3) 
         {
+          t_golpe += TIEMPO_APROXIMACION;
             if (duracion > 0.0f) 
             {
                 int largas_activas = 0;
@@ -135,19 +159,13 @@ bool es_alfombra_de_baile(SDL_GameController *mando)
     return (nombre != NULL && strstr(nombre, "Microntek") != NULL);
 }
 
-/* Humaniza un mapa ya cargado, dentro del rango de carriles indicado
-   (por ejemplo 0-3 para P1, 4-7 para P2)
-
-   La idea es simular que el jugador solo dispone de DOS pies: cada nota se
-   modela como "pisar" y cada pie, una vez usado, necesita
-   TIEMPO_RECUPERACION_PASO segundos para volver a estar disponible (y si la
-   nota es larga, el pie queda ocupado durante toda su duracion). Si cuando
-   llega una nota ningun pie esta libre todavia, la nota se descarta
-   (activa = false) en vez de dejarla imposible de tocar. */
-   
+/* Humaniza un mapa ya cargado, dentro del rango de carriles indicado.
+   La idea es simular que el jugador solo dispone de 2 pies, pq los humanos tenemos 2 pies XD
+*/
 void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carril_hasta)
 {
-    if (mapa == NULL || mapa->arreglo_notas == NULL) return;
+    if (mapa == NULL || mapa->arreglo_notas == NULL)
+      return;
 
     float pie_a_libre_en = -999.0f;
     float pie_b_libre_en = -999.0f;
@@ -181,7 +199,7 @@ void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carri
 
 /* Carga un nivel igual que cargar_nivel(), pero aplica la humanizacion
    sobre el rango de carriles indicado antes de devolverlo. Se deja
-   cargar_nivel() intacta para no afectar el modo con mando/teclado normal. */
+   cargar_nivel() intacta para no afectar el modo normal. */
 MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta)
 {
     MapaCancion mapa = cargar_nivel(ruta_archivo);
@@ -219,12 +237,14 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		{
 			n->activa = false;
 
-			/* Deducir el jugador según la posición logica del carril */
+			/* Deducir el jugador según la posición lógica del carril */
 			int jugador_miss = (n->carril < 4) ? 1 : 2;
 			char msg[64];
 
 			snprintf(msg, sizeof(msg), "[P%d] MISS - Nota perdida", jugador_miss);
 			game_log(LOG_INFO, msg, 0);
+			registrar_resultado(ev_gl, jugador_miss, RESULTADO_MISS);
+			activar_efecto_pared(ev_gl, jugador_miss, RESULTADO_MISS);
         	}
 	}
 
@@ -246,13 +266,12 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		            ev_gl->playlist.actual++;
 
 		            if (ev_gl->playlist.actual < ev_gl->playlist.cantidad) {
-		                if (es_alfombra_de_baile(ev_gl->mando_p1))
-		                    ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[ev_gl->playlist.actual], 0, 3);
+  		              if (es_alfombra_de_baile(ev_gl->jugadores[0].mando))
+  		                ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[ev_gl->playlist.actual], 0, 3);
 		                else
 		                    ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[ev_gl->playlist.actual]);
 		                ev_gl->tiempo_juego = 0.0f;
 		                game_log(LOG_INFO, "Cargando siguiente mapa de la playlist aleatoria.", 0);
-
 		                /* carga musica */
 		                if (ev_gl->musica_nivel_actual != NULL)
 		                {
@@ -273,11 +292,11 @@ void actualizar_notas(float dt, eventos_globales *ev_gl)
 		                    ev_gl->musica_nivel_actual = NULL;
 		                }
 		                ev_gl->playlist.modo_playlist = false;
-		                ev_gl->estado_juego = ESTADO_MENU;
 		                game_log(LOG_INFO, "¡Partida aleatoria completada exitosamente!", 0);
+		                iniciar_flujo_fin_partida(ev_gl);
 		            }
 		        } else {
-		            ev_gl->estado_juego = ESTADO_MENU;
+		            iniciar_flujo_fin_partida(ev_gl);
 		        }
 		    }
 		}

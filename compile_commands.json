@@ -16,6 +16,11 @@
 },
 {
   "directory": "/home/frani/code/fac-sdl",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/harfbuzz", "-I", "/usr/include/freetype2", "-I", "/usr/include/glib-2.0", "-I", "/usr/lib/x86_64-linux-gnu/glib-2.0/include", "-I", "/usr/include/sysprof-6", "-I", "/usr/include/libpng16", "-I", "/usr/include/webp", "-I", "/usr/include/SDL2", "-I", "/usr/include/x86_64-linux-gnu", "-I", "/usr/include/opus", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/ranking.c.o", "src/ranking.c"],
+  "file": "src/ranking.c"
+},
+{
+  "directory": "/home/frani/code/fac-sdl",
   "arguments": ["/usr/bin/gcc", "-c", "-m64", "-fvisibility=hidden", "-O3", "-std=c11", "-Iinclude", "-Ibuild/.gens/game/linux/x86_64/release/platform/windows/idl", "-D_REENTRANT", "-I", "/usr/include/harfbuzz", "-I", "/usr/include/freetype2", "-I", "/usr/include/glib-2.0", "-I", "/usr/lib/x86_64-linux-gnu/glib-2.0/include", "-I", "/usr/include/sysprof-6", "-I", "/usr/include/libpng16", "-I", "/usr/include/webp", "-I", "/usr/include/SDL2", "-I", "/usr/include/x86_64-linux-gnu", "-I", "/usr/include/opus", "-DNDEBUG", "-o", "build/.objs/game/linux/x86_64/release/src/game.c.o", "src/game.c"],
   "file": "src/game.c"
 },

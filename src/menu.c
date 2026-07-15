@@ -1,3 +1,4 @@
+#include <math.h>
 #include "SDL_events.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
@@ -8,6 +9,7 @@ void renderizar_fractales(eventos_globales ev_gl);
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 void fade_iris_out(eventos_globales *ev_gl);
 
+void grid_menu_3d(eventos_globales *ev_gl);
 void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
 void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
@@ -37,12 +39,9 @@ void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
 
 	/* ns: no_select, s: select */
-	SDL_Rect src_opcion_s = {3*64, 23, 64, 23};
-	SDL_Rect src_opcion_ns = {3*64, 0*64, 64, 21};
+	SDL_Rect src_opcion_s = {0*64, 5*64, 64*2, 64*2};
+	SDL_Rect src_opcion_ns = {0*64, 6*64, 64*2, 64*2};
 
-	if (rec_menu->opcion == 0) {
-	
-	}
 	SDL_Rect dest_opcion_s = {ANCHO_PANTALLA/6, LARGO_PANTALLA/2.5, 64*(ESCALADO_1+0.6), 64*1.5};
 	SDL_Rect dest_opcion_ns = {ANCHO_PANTALLA/12, LARGO_PANTALLA/2.5, 64*(ESCALADO_1+0.6), 64*1.5};
 	SDL_Rect dest_opcion_ns_1 = {ANCHO_PANTALLA/12, LARGO_PANTALLA/1.8, 64*(ESCALADO_1+0.6), 64*1.5};
@@ -55,94 +54,134 @@ void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 }
 void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
+		grid_menu_3d(ev_gl);
 
-	int ancho_final=64*8*ESCALADO_1;
-	int alto_final=64*ESCALADO_1;
+    if (rec_menu->sprites) 
+    {
+        SDL_Rect src_moon = {14*64, 0*64, 64*2, 64*2};
+        
+       /* Centramos la luna */
+       int x_luna = (ANCHO_PANTALLA / 2) - 64;
+       SDL_Rect dest_moon = {x_luna, 60, 64*2, 64*2};
 
-	int x_izquierda_opt = (int)(ANCHO_PANTALLA / 12);
-	int y_inicial_opt   = (int)(LARGO_PANTALLA / 2.5);
-	int ancho_final_opt = (int)(64 * (ESCALADO_1 + 0.6));
-	int alto_final_opt  = (int)(64 * 1.5);
-	int espaciado_opt   = alto_final_opt + 24;
+       /* Aplicar color magenta y dibujar el resplandor, aumenta el radio */
+       SDL_SetTextureColorMod(rec_menu->sprites, 255, 0, 255);
+       /* NOTA: cuidado con el bloom, puede sobrecargar cpu segun me dicen */
+       SDL_SetTextureBlendMode(rec_menu->sprites, SDL_BLENDMODE_ADD);
+       SDL_SetTextureAlphaMod(rec_menu->sprites, 100);
+       SDL_Rect dest_moon_bloom = { dest_moon.x - 15, dest_moon.y - 15, dest_moon.w + 30, dest_moon.h + 30 };
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_moon, &dest_moon_bloom);
 
-	if (rec_menu->sprites) 
-	{
-		SDL_Rect src_moon = {14*64, 0*64, 64*2, 64*2};
-		SDL_Rect dest_moon = {100, 100, 64*2, 64*2};
-		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_moon, &dest_moon);
+			 /* filtros magicos sacados desde internet... */
+       SDL_SetTextureBlendMode(rec_menu->sprites, SDL_BLENDMODE_BLEND);
+       SDL_SetTextureAlphaMod(rec_menu->sprites, 255);
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_moon, &dest_moon);
+       SDL_SetTextureColorMod(rec_menu->sprites, 255, 255, 255);
 
-		SDL_Rect src_arboleda = { 4*64, 0*64, (64*8), 64 };
-		SDL_Rect dest_arboleda_0;
-		dest_arboleda_0.x = (int)rec_menu->scroll_edificios; 
-		dest_arboleda_0.y = 470;
-		dest_arboleda_0.w = ancho_final;
-		dest_arboleda_0.h = alto_final;
+       int ancho_final_opt = (int)(64 * 3.0); /* Botones más anchos */
+       int alto_final_opt  = (int)(64 * 1.2);
+        
+       int x_botones = (ANCHO_PANTALLA / 2) - (ancho_final_opt / 2);
+       int y_inicial_opt = (int)(LARGO_PANTALLA / 2.2);
+       int espaciado_opt = alto_final_opt + 20;
 
-		SDL_Rect dest_arboleda_1;
-		dest_arboleda_1.x = dest_arboleda_0.x+ancho_final;
-		dest_arboleda_1.y = dest_arboleda_0.y;
-		dest_arboleda_1.w = dest_arboleda_0.w;
-		dest_arboleda_1.h = dest_arboleda_0.h;
+       SDL_Rect src_opcion_ns = {0, 4*64, 64*2, 64}; 
+       SDL_Rect src_opcion_s  = {0, 5*64, 64*2, 64}; 
 
-		SDL_Rect dest_arboleda_2;
-      dest_arboleda_2.x = dest_arboleda_1.x + ancho_final; 
-      dest_arboleda_2.y = dest_arboleda_0.y;
-      dest_arboleda_2.w = ancho_final;
-      dest_arboleda_2.h = alto_final;
+       SDL_Rect dest_opcion1 = {x_botones, y_inicial_opt, ancho_final_opt, alto_final_opt};
+       SDL_Rect dest_opcion2 = {x_botones, y_inicial_opt + espaciado_opt, ancho_final_opt, alto_final_opt};
+       SDL_Rect dest_opcion3 = {x_botones, y_inicial_opt + (espaciado_opt * 2), ancho_final_opt, alto_final_opt};
 
-		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_0);
-      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_1);
-      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_arboleda, &dest_arboleda_2);
-		
+       SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_s : &src_opcion_ns;
+       SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_s : &src_opcion_ns;
+       SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_s : &src_opcion_ns;
 
-		SDL_Rect src_opcion_jugar_ns = {3 * 64, 0, 64, 21};  /* Estado: No Seleccionada */
-		SDL_Rect src_opcion_jugar_s  = {3 * 64, 23, 64, 23}; /* Estado: Seleccionada */
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_1, &dest_opcion1);
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_2, &dest_opcion2);
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_3, &dest_opcion3);
 
-		SDL_Rect src_opcion_opt_ns = {0, 4*64, 64, 21};  /* Estado: No Seleccionada */
-		SDL_Rect src_opcion_opt_s  = {0, 4*64+23, 64, 23}; /* Estado: Seleccionada */
+       /* aplicando fuerza bruta para no dibujar de vuelta todas las opts */
+       /* NOTA: solucion temporal, remplzar a posteriori */
+       if (rec_menu->fuente) 
+       {
+           SDL_Color color_blanco = {255, 255, 255, 255};
+           char* textos_botones[3] = {"Jugar", "Salir", "Ranking"};
+           SDL_Rect* destinos_botones[3] = {&dest_opcion1, &dest_opcion2, &dest_opcion3};
 
-		SDL_Rect src_opcion_salir_ns = {0, 5*64, 64, 21};  /* Estado: No Seleccionada */
-		SDL_Rect src_opcion_salir_s = {0, 5*64+23, 64, 23}; /* Estado: Seleccionada */
+           for (int i = 0; i < 3; i++) 
+           {
+               SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, textos_botones[i], color_blanco);
+               if (surf) 
+               {
+                   SDL_Texture *tex = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
+                    
+                   SDL_Rect dest_texto = {
+                       destinos_botones[i]->x + (destinos_botones[i]->w - surf->w) / 2,
+                       destinos_botones[i]->y + (destinos_botones[i]->h - surf->h) / 2,
+                       surf->w,
+                       surf->h
+                   };
+                   SDL_RenderCopy(ev_gl->renderizado, tex, NULL, &dest_texto);
+                   
+                   SDL_FreeSurface(surf);
+                   SDL_DestroyTexture(tex);
+               }
+           }
+       }
+   }
 
-		SDL_Rect dest_opcion1 = {
-			x_izquierda_opt, 
-			y_inicial_opt, 
-			ancho_final_opt, 
-			alto_final_opt
-		};
-
-		/* Opción 2 (Centro) */
-		SDL_Rect dest_opcion2 = {
-			x_izquierda_opt, 
-			y_inicial_opt + espaciado_opt, 
-			ancho_final_opt, 
-			alto_final_opt
-		};
-
-		/* Opción 3 (Inferior) */
-		SDL_Rect dest_opcion3 = {
-			x_izquierda_opt, 
-			y_inicial_opt + (espaciado_opt * 2), 
-			ancho_final_opt, 
-			alto_final_opt
-		};
-
-		/* ahorro de lineas, debi conocer esto antes */
-		/* si se cumple y es verdadero se usa ?, si no : */
-		SDL_Rect *src_opt_1 = (rec_menu->opcion == 0) ? &src_opcion_jugar_s : &src_opcion_jugar_ns;
-		SDL_Rect *src_opt_2 = (rec_menu->opcion == 1) ? &src_opcion_opt_s : &src_opcion_opt_ns;
-		SDL_Rect *src_opt_3 = (rec_menu->opcion == 2) ? &src_opcion_salir_s : &src_opcion_salir_ns;
-
-		SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_1, &dest_opcion1);
-      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_2, &dest_opcion2);
-      SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, src_opt_3, &dest_opcion3);
-	}
-
-	SDL_Rect dest_titulo = { 100, 100, rec_menu->titulo_w, rec_menu->titulo_h };
-	if (rec_menu->textura_titulo) 
-		SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &dest_titulo);
-	
+   SDL_Rect dest_titulo = { 100, 100, rec_menu->titulo_w, rec_menu->titulo_h };
+   if (rec_menu->textura_titulo) {
+       SDL_RenderCopy(ev_gl->renderizado, rec_menu->textura_titulo, NULL, &dest_titulo);
+   }
 }
+
+void grid_menu_3d(eventos_globales *ev_gl)
+{
+    SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(ev_gl->renderizado, 255, 0, 255, 100); /* Magenta translúcido */
+
+    int horizonte_y = LARGO_PANTALLA / 2;
+    int centro_x = ANCHO_PANTALLA / 2;
+    float velocidad = 20.0f;
+    float espacio_z = 10.0f;
+    float z_max = 200.0f;
+    
+    float offset_z = fmodf(ev_gl->tiempo_juego * velocidad, espacio_z);
+
+    /* ineas horizontales con deformación */
+   for (float z = 1.0f; z < z_max; z += espacio_z)
+   {
+       float z_actual = z - offset_z;
+       if (z_actual <= 0.1f) continue;
+
+       int y_pantalla = horizonte_y + (int)(800.0f / z_actual);
+
+       if (y_pantalla < LARGO_PANTALLA && y_pantalla >= horizonte_y) {
+           int x_previo = 0;
+           /* La altura base modificada por un sin() para crear la primera onda */
+           int y_previo = y_pantalla + (int)(sin(ev_gl->tiempo_juego) * (60.0f / z_actual));
+
+           /* dibujamos la linea por segmentos de 20 píxeles para poder curvarla */
+           for (int x = 20; x <= ANCHO_PANTALLA; x += 20)
+            {
+                int y_ondulado = y_pantalla + (int)(sin(x * 0.05f + ev_gl->tiempo_juego) * (60.0f / z_actual));
+                SDL_RenderDrawLine(ev_gl->renderizado, x_previo, y_previo, x, y_ondulado);
+                x_previo = x;
+                y_previo = y_ondulado;
+            }
+        }
+    }
+
+    for (int i = -15; i <= 15; i++)
+    {
+        int x_fondo = centro_x + (i * 150);
+        SDL_RenderDrawLine(ev_gl->renderizado, centro_x, horizonte_y, x_fondo, LARGO_PANTALLA);
+    }
+
+    SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_NONE);
+}
+
 void fade_iris_out(eventos_globales *ev_gl)
 {
 	SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
@@ -171,7 +210,7 @@ void pintar_gradiente_noche_menu(SDL_Renderer *render)
 
 	SDL_Vertex vertices[4];
 
-	/* Arriba Izquierda */
+	/* arriba IIzquierda */
 	vertices[0].position.x = 0.0f;
 	vertices[0].position.y = 0.0f;
 	vertices[0].color = color_cenit;
@@ -201,10 +240,17 @@ void pintar_gradiente_noche_menu(SDL_Renderer *render)
 
 	int indices[6] = {0, 1, 2, 0, 2, 3};
 
-	/* Renderizado de geometría sin textura (NULL) para usar solo color */
+	/* Renderizado sin textura para usar solo color */
 	SDL_RenderGeometry(render, NULL, vertices, 4, indices, 6);
 }
 
+/* NOTA: sin implementar, propensa a fallos, arreglar lo siguiente */
+/* TODO:- solapa la musica
+        - No renderiza bien sobre el fondo
+        - se come la cpu (es decir, error de logica en alguna parte)
+        - No tengo portada aun asi que basicamente se vuelve loca al no encontrarla
+        - otros bugs menores
+*/
 ESTADO_ACTUAL pantalla_carga(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 {
     SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);

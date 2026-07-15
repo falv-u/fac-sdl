@@ -2,7 +2,6 @@
 #define COMMONS_H
 /* standar headers */
 #include <stdbool.h>
-
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
@@ -96,10 +95,6 @@ typedef enum {
 	NOTA_FALLADA      /* pasa de largo */
 } ESTADO_NOTA;
 
-/* TODO: carriles de notas
-typedef enum {
-} carriles;
-*/
 
 typedef struct {
 	float tiempo_golpe;  /* l momento exacto en que la base de la nota toca al juez */
@@ -136,6 +131,9 @@ typedef enum {
 	ESTADO_SELECT_NIVELES,
 	ESTADO_JUEGO,
 	ESTADO_GAMEOVER,
+	ESTADO_INGRESAR_NOMBRE,
+	ESTADO_RANKING,
+	ESTADO_DETALLE_JUGADOR,
 	ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
@@ -150,6 +148,21 @@ typedef struct {
     bool modo_playlist;    
 } PlaylistDificultad;
 
+typedef struct {
+	SDL_GameController *mando;
+	int puntaje;
+	int perfect, good, bad, miss;
+	float barra_ki;
+	float multiplicador;
+	bool bono_50_dado;
+	int bono_acumulado;
+	float tiempo_x3_restante;
+	float tiempo_jugado;
+
+	/* Efectos visuales de la pared */
+	float intensidad_pared;
+	SDL_Color color_pared;
+} jugador;
 typedef struct {
 	SDL_Window *ventana;
 	SDL_Renderer *renderizado;
@@ -167,13 +180,34 @@ typedef struct {
 
 	PlaylistDificultad playlist;
 	Mix_Music *musica_nivel_actual;
+	bool musica_iniciada;
   int opcion_dificultad;
-	
-	SDL_GameController *mando_p1;
-	SDL_GameController *mando_p2;
+
+	jugador jugadores[2];
+
+	/* ranking e ingreso de nombre al terminar la partida */
+	char nombre_ingresado[32];
+	int jugador_pidiendo_nombre; /* 0 = nadie, 1 o 2 segun jugador */
+	int ranking_cursor;         /* fila seleccionada en la pantalla de ranking */
+	int ranking_detalle_indice; /* que fila se esta mostrando en detalle */
 } eventos_globales;
 
+/* otros, para efectos visuales y demas */
+typedef enum {
+    VISUAL_PERFECT,
+    VISUAL_GOOD,
+    VISUAL_MISS
+} TipoImpacto;
 
+typedef struct {
+    float intensidad;    // Va de 1.0f a 0.0f (apagado)
+    SDL_Color color;     
+} pared_ecualizador;
+
+typedef struct {
+    pared_ecualizador p1; // Pared izquierda (Jugador 1)
+    pared_ecualizador p2; // Pared derecha (Jugador 2)
+} sistema_ecualizador;
 /* -------------------------------------------------- */
 
 
@@ -183,15 +217,21 @@ typedef struct {
 void Pantalla_Completa(SDL_Window *ventana);
 void update(float delta_time, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 void assets_load(void);
+void activar_efecto_pared(eventos_globales *ev_gl, int jugador, int resultado); 
 
 /* primitivas de ESTADO_JUEGO*/
 ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
 ESTADO_ACTUAL seleccionar_niveles(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
 void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada);
-ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento);
+ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento, TTF_Font *fuente);
 
 /* primitivas de selector de niveles */
 MapaCancion cargar_nivel(const char *ruta_archivo);
 MapaCancion cargar_nivel_desde_lista(int indice_elegido);
+
+/* primitivas de ranking / fin de partida */
+ESTADO_ACTUAL pantalla_ranking(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_detalle_jugador(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_ingresar_nombre(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
 
 #endif

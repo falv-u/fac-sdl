@@ -2,7 +2,8 @@
 
 /* funciones utiles */
 
-void Pantalla_Completa(SDL_Window *ventana)
+void
+Pantalla_Completa(SDL_Window *ventana)
 {
     Uint32 flags_actuales = SDL_GetWindowFlags(ventana);
 

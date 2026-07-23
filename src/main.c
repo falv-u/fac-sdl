@@ -26,6 +26,7 @@ void	 iniciar_componente();
 void	 iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl);
 void	 iniciar_event_global(event_global *ev_gl);
 void	 manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
+void	 manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event);
 
 void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event evento);
 void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
@@ -41,126 +42,161 @@ void	 botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_p
 bool	 es_alfombra_de_baile(SDL_GameController *mando);
 Mapa	 cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
 
+
+void	 apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu);
+
 int
 main(void)
 {
 
-	unsigned int		last_frame_time;
+
 	menu_principal_recursos	rec_menu;	
 	event_global		ev_gl;
+	unsigned int		last_frame_time;
 	float 			delta_time;
 	int			i;
 
+	SDL_Event evento;
+	srand(time(NULL));
+
 	delta_time = 0;
 	last_frame_time = SDL_GetTicks();
-	srand(time(NULL));
+
 	iniciar_componente();
 	/*
 	 * la ventana tambien se crea aqui al estar
 	 * anclada a los eventos globales como cerrar
 	 */
+	iniciar_event_global(&ev_gl);
 
-	iniciar_event_global
-	(&ev_gl);
 	ranking_cargar();
+
 	for (i = 0; i < SDL_NumJoysticks(); i++) {
 		if (!SDL_IsGameController(i))
 			continue;
 		ev_gl.jugadores[0].mando = SDL_GameControllerOpen(i);
 		if (ev_gl.jugadores[0].mando == NULL)
 			continue;
-		game_log(LOG_INFO, "Mando pre-conectado detectado y asignado",
-		    NULL);
+		game_log(LOG_INFO, "Mando pre-conectado detectado y asignado");
 	}
 
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	while (ev_gl.corriendo)
 	{
-		SDL_Event evento;
-
 		manejo_delta_time(&delta_time, &last_frame_time);
 
-		if (ev_gl.estado_juego == ESTADO_JUEGO && ev_gl.pausado == true) {
-		    delta_time = 0.0f;
-		}
+		if (ev_gl.estado_juego == ESTADO_JUEGO && ev_gl.pausado == true)
+			delta_time = 0.0f;
+
 		update(delta_time, &ev_gl,  &rec_menu);
 
-		/* ignorar warning ya que se declara al incio de la funcion para los eventos de usuario */ 
+		/*
+		 * ignorar warning ya que se declara al incio de la
+		 * funcion para los eventos de usuario.
+		 */ 
 		eventos_accionados_usuario(&ev_gl, evento, &rec_menu); 
-      
-		switch (ev_gl.estado_juego)
-			{
-				case ESTADO_MENU:
-					ev_gl.estado_juego=menu_principal(&ev_gl, &evento, &rec_menu);
-					break;
-				case ESTADO_CARGA:
-					ev_gl.estado_juego=pantalla_carga(&ev_gl,&rec_menu);
-					break;
-				case ESTADO_SELECT_TIPO_PARTIDA:
-					break;
-				case ESTADO_SELECT_NIVELES:
-					ev_gl.estado_juego = seleccionar_niveles(&ev_gl, &rec_menu);
-					break;
-				case ESTADO_JUEGO:
-					ev_gl.estado_juego=juego_principal(&ev_gl, &evento, rec_menu.fuente);
-					break;
-				case ESTADO_GAMEOVER:
-					break;
-				case ESTADO_INGRESAR_NOMBRE:
-					ev_gl.estado_juego = pantalla_ingresar_nombre(&ev_gl, &evento, &rec_menu);
-					break;
-				case ESTADO_RANKING:
-					ev_gl.estado_juego = pantalla_ranking(&ev_gl, &evento, &rec_menu);
-					break;
-				case ESTADO_DETALLE_JUGADOR:
-					ev_gl.estado_juego = pantalla_detalle_jugador(&ev_gl, &evento, &rec_menu);
-					break;
-				case ESTADO_SALIR:
-					ev_gl.corriendo = false;
-					game_log(LOG_DEBUG, "ESTADO_SALIR HA SIDO RETORNADO POR UNA FUNCION", 0);
-					break;
-				default:
-					break;
-			}
+
+      		manejo_estado(&ev_gl, &rec_menu, evento);
 
 	}
+	apagar_sdl(&ev_gl, &rec_menu);
+	return 0;
+}
 
-	for (int i = 0; i < 2; i++) {
-		if (ev_gl.jugadores[i].mando != NULL) {
-			SDL_GameControllerClose(ev_gl.jugadores[i].mando);
-			ev_gl.jugadores[i].mando = NULL;
+void
+manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event evento)
+{
+	
+		switch (ev_gl->estado_juego) {
+
+		case ESTADO_MENU:
+			ev_gl->estado_juego=menu_principal(ev_gl, &evento, rec_menu);
+			break;
+		case ESTADO_CARGA:
+			ev_gl->estado_juego=pantalla_carga(ev_gl,rec_menu);
+			break;
+		case ESTADO_SELECT_TIPO_PARTIDA:
+			break;
+		case ESTADO_SELECT_NIVELES:
+			ev_gl->estado_juego = seleccionar_niveles(ev_gl, rec_menu);
+			break;
+		case ESTADO_JUEGO:
+			ev_gl->estado_juego=juego_principal(ev_gl, &evento, rec_menu->fuente);
+			break;
+		case ESTADO_GAMEOVER:
+			break;
+		case ESTADO_INGRESAR_NOMBRE:
+			ev_gl->estado_juego = pantalla_ingresar_nombre(ev_gl, &evento, rec_menu);
+			break;
+		case ESTADO_RANKING:
+			ev_gl->estado_juego = pantalla_ranking(ev_gl, &evento, rec_menu);
+			break;
+		case ESTADO_DETALLE_JUGADOR:
+			ev_gl->estado_juego = pantalla_detalle_jugador(ev_gl, &evento, rec_menu);
+			break;
+		case ESTADO_SALIR:
+			ev_gl->corriendo = false;
+			game_log(LOG_DEBUG, "ESTADO_SALIR HA SIDO RETORNADO POR UNA FUNCION", 0);
+			break;
+		default:
+			break;
+		}
+}
+
+void
+apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu)
+{
+	int	i;
+
+	/*
+	 * se supone que es automatico, pero es buena practica cerrar
+	 * cerrar lo que abriste
+	 */
+
+	for (i = 0; i < MAX_PLAYERS; i++) {
+		if (ev_gl->jugadores[i].mando != NULL) {
+			SDL_GameControllerClose(ev_gl->jugadores[i].mando);
+			ev_gl->jugadores[i].mando = NULL;
 		}
 	}
 
-	if (ev_gl.mapa_actual.arreglo_notas != NULL) {
-		free(ev_gl.mapa_actual.arreglo_notas);
-		ev_gl.mapa_actual.arreglo_notas = NULL;
+	if (ev_gl->mapa_actual.arreglo_notas != NULL) {
+		free(ev_gl->mapa_actual.arreglo_notas);
+		ev_gl->mapa_actual.arreglo_notas = NULL;
 	}
 
-	if (rec_menu.textura_titulo) SDL_DestroyTexture(rec_menu.textura_titulo);
-	if (rec_menu.sprites) SDL_DestroyTexture(rec_menu.sprites);
-	if (rec_menu.fuente) TTF_CloseFont(rec_menu.fuente);
-	if (rec_menu.sfx_opcion) Mix_FreeChunk(rec_menu.sfx_opcion);
+	if (rec_menu->textura_titulo)
+		SDL_DestroyTexture(rec_menu->textura_titulo);
+	if (rec_menu->sprites)
+		SDL_DestroyTexture(rec_menu->sprites);
+	if (rec_menu->fuente)
+		TTF_CloseFont(rec_menu->fuente);
+	if (rec_menu->sfx_opcion)
+		Mix_FreeChunk(rec_menu->sfx_opcion);
 
 	Mix_HaltMusic();
-	if (rec_menu.musica_fondo) Mix_FreeMusic(rec_menu.musica_fondo);
+	if (rec_menu->musica_fondo)
+		Mix_FreeMusic(rec_menu->musica_fondo);
+
 	Mix_CloseAudio();
 
-	if (ev_gl.renderizado) SDL_DestroyRenderer(ev_gl.renderizado);
-	if (ev_gl.ventana) SDL_DestroyWindow(ev_gl.ventana);
+	if (ev_gl->renderizado)
+		SDL_DestroyRenderer(ev_gl->renderizado);
+	if (ev_gl->ventana)
+		SDL_DestroyWindow(ev_gl->ventana);
 
 	Mix_Quit();
 	TTF_Quit();
 	IMG_Quit(); 
 	SDL_Quit();
 
-	return 0;
+	game_log(LOG_INFO, "todo ok, fin del programa...");
+
 }
 
-
-void iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global
-                         *ev_gl)
+void
+iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl)
 {
 	rec_menu->opcion=0;
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);

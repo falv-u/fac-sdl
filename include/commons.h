@@ -6,12 +6,12 @@
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
-#include "SDL_gamecontroller.h"
-#include "SDL_mixer.h"
-#include "SDL_rect.h"
-#include "SDL_video.h"
-#include "SDL_events.h"
-#include "SDL_render.h"
+#include <SDL_gamecontroller.h>
+#include <SDL_mixer.h>
+#include <SDL_rect.h>
+#include <SDL_video.h>
+#include <SDL_events.h>
+#include <SDL_render.h>
 #include <SDL_ttf.h>
 #include <SDL_audio.h>
 
@@ -20,18 +20,22 @@
 
 /* Macros */
 
+/* log.h */
+#define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
+
+/* Jugabilidad */
 #define MAX_CANCIONES_PLAYLIST 4
+#define MAX_PLAYERS 2
+#define Y_JUEZ 600.0f
+#define Y_SPAWN -64.0f
+#define TIEMPO_APROXIMACION 1.5f /* La flecha tarda 1.5s en caer desde que aparece */
 
 /* Delta Time */
 #define FPS 30
 #define TARGET_FPS      60
 #define FRAME_TARGET_TIME (1000/FPS)
 
-#define Y_JUEZ 600.0f
-#define Y_SPAWN -64.0f
-#define TIEMPO_APROXIMACION 1.5f /* La flecha tarda 1.5s en caer desde que aparece */
 
-extern int last_frame_time;
 
 /* renderizado */
 #define LARGO_PANTALLA 720
@@ -40,13 +44,11 @@ extern int last_frame_time;
 
 #define TILE_64 64
 
-SDL_Window *crear_ventana();
+extern int last_frame_time;
 
-/* log.h */
-#define LOG_LEVEL LOG_DEBUG /* Maquina de estado */
+
 
 /* MENU */
-
 typedef struct {
     int src_x, src_y;  // Coordenadas de origen 1024x1024
     int dest_x, dest_y;// Coordenadas de destino en la pantalla
@@ -214,15 +216,15 @@ typedef struct {
     pared_ecualizador p2; // Pared derecha (Jugador 2)
 } sistema_ecualizador;
 /* -------------------------------------------------- */
-
-
 /* primitivas */
 
 /* renderizado en pantalla */
-void Pantalla_Completa(SDL_Window *ventana);
-void update(float delta_time, event_global *ev_gl, menu_principal_recursos *rec_menu);
-void assets_load(void);
-void activar_efecto_pared(event_global *ev_gl, int jugador, int resultado); 
+
+SDL_Window	*crear_ventana();
+void		 Pantalla_Completa(SDL_Window *ventana);
+void		 update(float delta_time, event_global *ev_gl, menu_principal_recursos *rec_menu);
+void		 assets_load(void);
+void		 activar_efecto_pared(event_global *ev_gl, int jugador, int resultado); 
 
 /* primitivas de ESTADO_JUEGO*/
 ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);

@@ -108,7 +108,7 @@ manejo_estado(event_global *ev_gl, menu_recursos *rec_menu, SDL_Event evento)
 		ev_gl->estado_juego = seleccionar_niveles(ev_gl, rec_menu);
 		break;
 	case ESTADO_JUEGO:
-		ev_gl->estado_juego=juego_principal(ev_gl, &evento, rec_menu->fuente);
+		ev_gl->estado_juego=juego_principal(ev_gl, &evento, ev_gl->fuente[0]);
 		break;
 	case ESTADO_GAMEOVER:
 		break;
@@ -154,8 +154,6 @@ apagar_sdl(event_global *ev_gl, menu_recursos *rec_menu)
 		SDL_DestroyTexture(rec_menu->textura_titulo);
 	if (rec_menu->sprites)
 		SDL_DestroyTexture(rec_menu->sprites);
-	if (rec_menu->fuente)
-		TTF_CloseFont(rec_menu->fuente);
 	if (rec_menu->sfx_opcion)
 		Mix_FreeChunk(rec_menu->sfx_opcion);
 
@@ -183,7 +181,6 @@ void
 iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl)
 {
 	rec_menu->opcion=0;
-	rec_menu->fuente = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
 	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0001.png");
 
 	rec_menu->color1.r = 255;
@@ -201,13 +198,6 @@ iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl)
 	rec_menu->musica_fondo= Mix_LoadMUS("./assets/sfx/menu.mp3");
 	rec_menu->sfx_opcion = Mix_LoadWAV("./assets/sfx/ui-menu-onset.ogg");
 
-	if (rec_menu->fuente) {
-	        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
-	        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
-	        rec_menu->titulo_w = surf->w;
-	        rec_menu->titulo_h = surf->h;
-	        SDL_FreeSurface(surf);
-	}
 
 	rec_menu->scroll_edificios = 0.0f;
 	rec_menu->vel_edificios = 300.0f;
@@ -242,7 +232,17 @@ iniciar_event_global(event_global *ev_gl)
 	ev_gl->ranking_cursor = 0;
 	ev_gl->ranking_detalle_indice = 0;
 
+	rec_menu->fuente[0] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
+	rec_menu->fuente[1] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
     
+
+	if (rec_menu->fuente[0]) {
+	        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
+	        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
+	        rec_menu->titulo_w = surf->w;
+	        rec_menu->titulo_h = surf->h;
+	        SDL_FreeSurface(surf);
+	}
 
 	for (i = 0; i < SDL_NumJoysticks(); i++) {
 		if (!SDL_IsGameController(i))

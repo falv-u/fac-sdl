@@ -12,15 +12,15 @@
    listo para pisar el siguiente, en segundos */
 #define TIEMPO_RECUPERACION_PASO 0.08f
 
-void actualizar_notas(float dt, eventos_globales *ev_gl);
-void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+void actualizar_notas(float dt, event_global *ev_gl);
+void update(float dt, event_global *ev_gl, menu_principal_recursos *rec_menu);
 
-MapaCancion cargar_nivel(const char *ruta_archivo);
+Mapa cargar_nivel(const char *ruta_archivo);
 bool es_alfombra_de_baile(SDL_GameController *mando);
-void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carril_hasta);
-MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
+void humanizar_mapa_para_alfombra(Mapa *mapa, int carril_desde, int carril_hasta);
+Mapa cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
 
-void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+void update(float dt, event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
 	if (ev_gl->is_iris_fading_out == true)
 	{
@@ -73,9 +73,9 @@ void update(float dt, eventos_globales *ev_gl, menu_principal_recursos *rec_menu
 	}
 }
 
-MapaCancion cargar_nivel(const char *ruta_archivo)
+Mapa cargar_nivel(const char *ruta_archivo)
 {
-    MapaCancion mapa = {0};
+    Mapa mapa = {0};
     if (strlen(ruta_archivo) == 0) return mapa;
 
     FILE *archivo = fopen(ruta_archivo, "r");
@@ -162,7 +162,7 @@ bool es_alfombra_de_baile(SDL_GameController *mando)
 /* Humaniza un mapa ya cargado, dentro del rango de carriles indicado.
    La idea es simular que el jugador solo dispone de 2 pies, pq los humanos tenemos 2 pies XD
 */
-void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carril_hasta)
+void humanizar_mapa_para_alfombra(Mapa *mapa, int carril_desde, int carril_hasta)
 {
     if (mapa == NULL || mapa->arreglo_notas == NULL)
       return;
@@ -200,14 +200,14 @@ void humanizar_mapa_para_alfombra(MapaCancion *mapa, int carril_desde, int carri
 /* Carga un nivel igual que cargar_nivel(), pero aplica la humanizacion
    sobre el rango de carriles indicado antes de devolverlo. Se deja
    cargar_nivel() intacta para no afectar el modo normal. */
-MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta)
+Mapa cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta)
 {
-    MapaCancion mapa = cargar_nivel(ruta_archivo);
+    Mapa mapa = cargar_nivel(ruta_archivo);
     humanizar_mapa_para_alfombra(&mapa, carril_desde, carril_hasta);
     return mapa;
 }
 
-void actualizar_notas(float dt, eventos_globales *ev_gl)
+void actualizar_notas(float dt, event_global *ev_gl)
 {
 	ev_gl->tiempo_juego += dt;
 	float velocidad = (Y_JUEZ - Y_SPAWN) / TIEMPO_APROXIMACION;

@@ -41,19 +41,33 @@ int procesar_cancion_y_metadatos(const char *ruta_audio, int id_nivel, int dific
     }
 
     snprintf(meta_salida->ruta_portada, sizeof(meta_salida->ruta_portada), "./niveles/portada_%d.jpg", id_nivel);
-    snprintf(cmd, sizeof(cmd), "ffmpeg -v error -y -i \"%s\" -an -vcodec copy \"%s\" 2>/dev/null", ruta_audio, meta_salida->ruta_portada);
+    snprintf(cmd, sizeof(cmd), "ffmpeg -v error -y -i \"%s\" -an -frames:v 1 \"%s\" 2>/dev/null", ruta_audio, meta_salida->ruta_portada);
     meta_salida->tiene_portada = (system(cmd) == 0);
+
+    /* si es MP3 se crea un archivo ogg temporal */
+    char ruta_analisis[512];
+    strncpy(ruta_analisis, ruta_audio, sizeof(ruta_analisis));
+    bool es_mp3 = (strstr(ruta_audio, ".mp3") != NULL || strstr(ruta_audio, ".MP3") != NULL);
+    
+    if (es_mp3) {
+        snprintf(ruta_analisis, sizeof(ruta_analisis), "./niveles/temp_%d.ogg", id_nivel);
+        snprintf(cmd, sizeof(cmd), "ffmpeg -v error -y -i \"%s\" -vn -c:a libvorbis -q:a 4 \"%s\"", ruta_audio, ruta_analisis);
+        if (system(cmd) != 0) {
+            game_log(LOG_ERROR, "Error convirtiendo MP3 a OGG temporal", ruta_audio);
+            return -1;
+        }
+    }
 
     if (dificultad_deseada == 0) {
         for (int i = 1; i <= 3; i++) {
-            snprintf(cmd, sizeof(cmd), "./generador_mapas \"%s\" %d > \"./niveles/nivel%d_diff%d.txt\"", ruta_audio, i, id_nivel, i);
+            snprintf(cmd, sizeof(cmd), "./generador_mapas \"%s\" %d > \"./niveles/nivel%d_diff%d.txt\"", ruta_analisis, i, id_nivel, i);
             if (system(cmd) != 0) {
                 game_log(LOG_ERROR, "Error al invocar ./generador_mapas", cmd);
                 return -1;
             }
         }
     } else if (dificultad_deseada >= 1 && dificultad_deseada <= 3) {
-        snprintf(cmd, sizeof(cmd), "./generador_mapas \"%s\" %d > \"./niveles/nivel%d_diff%d.txt\"", ruta_audio, dificultad_deseada, id_nivel, dificultad_deseada);
+        snprintf(cmd, sizeof(cmd), "./generador_mapas \"%s\" %d > \"./niveles/nivel%d_diff%d.txt\"", ruta_analisis, dificultad_deseada, id_nivel, dificultad_deseada);
         if (system(cmd) != 0) {
             game_log(LOG_ERROR, "Error al invocar ./generador_mapas", cmd);
             return -1;
@@ -63,6 +77,11 @@ int procesar_cancion_y_metadatos(const char *ruta_audio, int id_nivel, int dific
          return -1;
     }
 
+    /* limpieza del archivo temporal */
+    if (es_mp3) {
+        remove(ruta_analisis);
+    }
+
     char ruta_meta[512];
     snprintf(ruta_meta, sizeof(ruta_meta), "./niveles/nivel%d_meta.txt", id_nivel);
     FILE *f_meta = fopen(ruta_meta, "w");
@@ -70,11 +89,12 @@ int procesar_cancion_y_metadatos(const char *ruta_audio, int id_nivel, int dific
         fprintf(f_meta, "%s\n", meta_salida->titulo);
         fprintf(f_meta, "%f\n", meta_salida->duracion);
         fprintf(f_meta, "%s\n", meta_salida->ruta_portada);
-        fprintf(f_meta, "%s\n", ruta_audio); /* Se inyecta la ruta origen del audio */
+        fprintf(f_meta, "%s\n", ruta_audio); /* Se inyecta la ruta origen del audio, NO el temporal */
         fclose(f_meta);
     } else {
         game_log(LOG_ERROR, "No se pudo escribir el archivo de metadatos", ruta_meta);
     }
+    
     game_log(LOG_INFO, "Metadatos y niveles procesados exitosamente", meta_salida->titulo);
     return 0;
 }

@@ -6,61 +6,73 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+
 /* librerias sistema no estandar */
-#include "SDL_events.h" 
-#include "SDL_gamecontroller.h" 
-#include "SDL_keycode.h"
-#include "SDL_ttf.h"
-#include "SDL_image.h"
-#include "SDL_mixer.h"
+#include <SDL_events.h> 
+#include <SDL_gamecontroller.h> 
+#include <SDL_keycode.h>
+#include <SDL_ttf.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
 
 /* headers propios */
+#include "SDL_timer.h"
 #include "commons.h"
 #include "ranking.h"
 #include "log.h"
 
-void iniciar_componente();
-void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl);
-void iniciar_eventos_globales(eventos_globales *ev_gl);
-void manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
 
-void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento);
-void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
+void	 iniciar_componente();
+void	 iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl);
+void	 iniciar_event_global(event_global *ev_gl);
+void	 manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
 
+void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event evento);
+void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void	 teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
 
-void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento);
-void evaluar_golpe(int carril_presionado, int jugador, eventos_globales *ev_gl);
+void	 teclas_juego_principal(event_global *ev_gl, SDL_Event evento);
+void	 evaluar_golpe(int carril_presionado, int jugador, event_global *ev_gl);
 
-void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void	 manejo_mando(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void	 botones_mando_juego_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void	 botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
 
-bool es_alfombra_de_baile(SDL_GameController *mando);
-MapaCancion cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
+bool	 es_alfombra_de_baile(SDL_GameController *mando);
+Mapa	 cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
 
-int main(void)
+int
+main(void)
 {
-	srand(time(NULL));
-	eventos_globales ev_gl;
-	menu_principal_recursos rec_menu;
-	
-	float delta_time=0;
-	unsigned int last_frame_time = SDL_GetTicks();
 
+	unsigned int		last_frame_time;
+	menu_principal_recursos	rec_menu;	
+	event_global		ev_gl;
+	float 			delta_time;
+	int			i;
+
+	delta_time = 0;
+	last_frame_time = SDL_GetTicks();
+	srand(time(NULL));
 	iniciar_componente();
-	iniciar_eventos_globales(&ev_gl); /* la ventana tambien se crea aqui al estar anclada a los eventos globales como cerrar */
+	/*
+	 * la ventana tambien se crea aqui al estar
+	 * anclada a los eventos globales como cerrar
+	 */
+
+	iniciar_event_global
+	(&ev_gl);
 	ranking_cargar();
-	for (int i = 0; i < SDL_NumJoysticks(); i++)
-	{
-	    if (SDL_IsGameController(i)) {
-	        ev_gl.jugadores[0].mando = SDL_GameControllerOpen(i);
-	        if (ev_gl.jugadores[0].mando) {
-	            game_log(LOG_INFO, "Mando pre-conectado detectado y asignado", SDL_GameControllerName(ev_gl.jugadores[0].mando));
-	            break; 
-	        }
-	    }
+	for (i = 0; i < SDL_NumJoysticks(); i++) {
+		if (!SDL_IsGameController(i))
+			continue;
+		ev_gl.jugadores[0].mando = SDL_GameControllerOpen(i);
+		if (ev_gl.jugadores[0].mando == NULL)
+			continue;
+		game_log(LOG_INFO, "Mando pre-conectado detectado y asignado",
+		    NULL);
 	}
+
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	while (ev_gl.corriendo)
@@ -68,6 +80,10 @@ int main(void)
 		SDL_Event evento;
 
 		manejo_delta_time(&delta_time, &last_frame_time);
+
+		if (ev_gl.estado_juego == ESTADO_JUEGO && ev_gl.pausado == true) {
+		    delta_time = 0.0f;
+		}
 		update(delta_time, &ev_gl,  &rec_menu);
 
 		/* ignorar warning ya que se declara al incio de la funcion para los eventos de usuario */ 
@@ -79,8 +95,7 @@ int main(void)
 					ev_gl.estado_juego=menu_principal(&ev_gl, &evento, &rec_menu);
 					break;
 				case ESTADO_CARGA:
-					break;
-				case ESTADO_PAUSA:
+					ev_gl.estado_juego=pantalla_carga(&ev_gl,&rec_menu);
 					break;
 				case ESTADO_SELECT_TIPO_PARTIDA:
 					break;
@@ -144,7 +159,8 @@ int main(void)
 }
 
 
-void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *ev_gl)
+void iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global
+                         *ev_gl)
 {
 	rec_menu->opcion=0;
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
@@ -181,15 +197,16 @@ void iniciar_recursos_menu(menu_principal_recursos *rec_menu, eventos_globales *
 		Mix_PlayMusic(rec_menu->musica_fondo, -1);
 }
 
-void iniciar_eventos_globales(eventos_globales *ev_gl)
+void iniciar_event_global(event_global
+                         *ev_gl)
 {
     ev_gl->estado_juego = ESTADO_MENU;
     ev_gl->corriendo = true;
+   	ev_gl->pausado = false; 
     ev_gl->ventana = crear_ventana();
     ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
     ev_gl->iris_radius = 800.0;
     ev_gl->is_iris_fading_out = false;
-    
     ev_gl->jugadores[0].mando = NULL;
     ev_gl->jugadores[1].mando = NULL;
     
@@ -205,7 +222,8 @@ void iniciar_eventos_globales(eventos_globales *ev_gl)
     ev_gl->ranking_detalle_indice = 0;
 }
 
-void eventos_globales_accionados_simples(eventos_globales *ev_gl, SDL_Event evento)
+void event_global_accionados_simples(event_global
+                                 *ev_gl, SDL_Event evento)
 {
 	if (evento.type == SDL_QUIT) 
 	{
@@ -261,11 +279,12 @@ void manejo_delta_time(float *delta_time, unsigned int *last_frame_time)
 		SDL_Delay(FRAME_TARGET_TIME - frame_duration);
 }
 
-void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void eventos_accionados_usuario(event_global
+                         *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	while (SDL_PollEvent(&evento))
 		{
-			eventos_globales_accionados_simples(ev_gl, evento);
+			event_global_accionados_simples(ev_gl,evento);
 			manejo_mando(ev_gl, evento, rec_menu);
 
 			if (evento.type == SDL_TEXTINPUT && ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE)
@@ -282,8 +301,8 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 
 					if (evento.key.keysym.sym == SDLK_RETURN)
 					{
-						if (rec_menu->musica_fondo)
-							Mix_PlayMusic(rec_menu->musica_fondo, -1);
+						// if (rec_menu->musica_fondo)
+						// 	Mix_PlayMusic(rec_menu->musica_fondo, -1);
 
 						if (rec_menu->opcion == 0)
 							ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
@@ -323,12 +342,12 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 				        if (ev_gl->playlist.modo_playlist && ev_gl->playlist.cantidad > 0)
 				        {
 										if (es_alfombra_de_baile(ev_gl->jugadores[0].mando))
-								        ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[0], 0, 3);
-								    else
+										  ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[0], 0, 3);
+										else
 										    ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
 					          ev_gl->tiempo_juego = 0.0f;
 					          ev_gl->musica_iniciada = false;
-					          ev_gl->estado_juego = ESTADO_JUEGO;
+					          ev_gl->estado_juego = ESTADO_CARGA;
 					          game_log(LOG_INFO, "Iniciando partida aleatoria.", 0);
 
 					          if (ev_gl->musica_nivel_actual != NULL) {
@@ -400,11 +419,11 @@ void eventos_accionados_usuario(eventos_globales *ev_gl, SDL_Event evento, menu_
 				{
 				   if (evento.key.keysym.sym == SDLK_UP && ev_gl->ranking_cursor > 0)
 				       ev_gl->ranking_cursor--;
-    
-				   if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->ranking_cursor < cantidad_ranking - 1)
+				     
+				   if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->ranking_cursor < ranking_obtener_cantidad() - 1)
 				        ev_gl->ranking_cursor++;
       
-				    if (evento.key.keysym.sym == SDLK_RETURN && cantidad_ranking > 0)
+				    if (evento.key.keysym.sym == SDLK_RETURN && ranking_obtener_cantidad() > 0)
 				    {
 				        ev_gl->ranking_detalle_indice = ev_gl->ranking_cursor;
 				        ev_gl->estado_juego = ESTADO_DETALLE_JUGADOR;
@@ -449,7 +468,8 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
 	}
 }
 
-void activar_efecto_pared(eventos_globales *ev_gl, int num_jugador, int resultado) 
+void activar_efecto_pared(event_global
+                         *ev_gl, int num_jugador, int resultado) 
 {
     jugador *p = &ev_gl->jugadores[num_jugador - 1];
     
@@ -466,7 +486,8 @@ void activar_efecto_pared(eventos_globales *ev_gl, int num_jugador, int resultad
         p->color_pared = (SDL_Color){255, 30, 30, 255}; /* Rojo */
     }
 }
-void evaluar_golpe(int carril_presionado, int jugador, eventos_globales *ev_gl)
+void evaluar_golpe(int carril_presionado, int jugador, event_global
+                 *ev_gl)
 {
     for (int i = ev_gl->mapa_actual.notas_pasadas; i < ev_gl->mapa_actual.total_notas; i++)
     {
@@ -507,11 +528,23 @@ void evaluar_golpe(int carril_presionado, int jugador, eventos_globales *ev_gl)
     }
 }
 
-void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
+void teclas_juego_principal(event_global
+                         *ev_gl, SDL_Event evento)
 {
 	int carril_presionado = -1;
 	int jugador = -1;
-
+	if (evento.key.keysym.sym == SDLK_p)
+	{
+		ev_gl->pausado = !ev_gl->pausado;
+		if (ev_gl->pausado)
+		{
+			Mix_PauseMusic();
+		} else {
+			Mix_ResumeMusic();
+		}
+		return;
+	}
+	if (ev_gl->pausado) return;
 	/* Carriles P1 */
 	if (evento.key.keysym.sym == SDLK_h)      { carril_presionado = 0; jugador = 1; }
 	else if (evento.key.keysym.sym == SDLK_j) { carril_presionado = 1; jugador = 1; }
@@ -529,7 +562,8 @@ void teclas_juego_principal(eventos_globales *ev_gl, SDL_Event evento)
 }
 
 
-void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void manejo_mando(event_global
+                 *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	if (evento.type == SDL_CONTROLLERDEVICEADDED) 
 	{
@@ -586,7 +620,8 @@ void manejo_mando(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recu
 	}
 }
 
-void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void botones_mando_juego_principal(event_global
+                                 *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	int carril_presionado = -1;
 	int offset_carril = -1;
@@ -633,7 +668,7 @@ void botones_mando_juego_principal(eventos_globales *ev_gl, SDL_Event evento, me
 	
 }
 
-void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
 {
 	int opcion_anterior = rec_menu->opcion;
 
@@ -646,9 +681,8 @@ void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, men
 			if (rec_menu->opcion < 3) rec_menu->opcion++;
 			break;
 		case SDL_CONTROLLER_BUTTON_START:
-			if (rec_menu->musica_fondo)
-				Mix_PlayMusic(rec_menu->musica_fondo, -1);
-
+			// if (rec_menu->musica_fondo)
+			// 	Mix_PlayMusic(rec_menu->musica_fondo, -1);
 			if (rec_menu->opcion == 0)
 				ev_gl->is_iris_fading_out = true;
 			else if (rec_menu->opcion == 2) {
@@ -669,3 +703,4 @@ void botones_mando_menu_principal(eventos_globales *ev_gl, SDL_Event evento, men
 			Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
 	}
 }
+

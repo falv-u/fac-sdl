@@ -1,10 +1,17 @@
 #include "ranking.h"
+#include "commons.h"
 #include "log.h"
 #include <stdio.h>
 #include <string.h>
 
-EntradaRanking tabla_ranking[MAX_RANKING];
-int cantidad_ranking = 0;
+/* NOTA: static es para limitarlas a este archivo 'ranking.c' */ 
+static EntradaRanking tabla_ranking[MAX_RANKING];
+static int cantidad_ranking = 0;
+
+int ranking_obtener_cantidad(void)
+{
+    return cantidad_ranking;
+}
 
 void dibujar_texto(SDL_Renderer *renderizado, TTF_Font *fuente, const char *texto, int x, int y, SDL_Color color)
 {
@@ -98,7 +105,8 @@ void ranking_ordenar(void)
 		}
 	}
 }
-void reiniciar_puntajes(eventos_globales *ev_gl)
+
+void reiniciar_puntajes(event_global *ev_gl)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -122,7 +130,7 @@ void reiniciar_puntajes(eventos_globales *ev_gl)
 	ev_gl->jugador_pidiendo_nombre = 0;
 }
 
-void actualizar_ki_y_tiempo(eventos_globales *ev_gl, float dt)
+void actualizar_ki_y_tiempo(event_global *ev_gl, float dt)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -143,7 +151,7 @@ void actualizar_ki_y_tiempo(eventos_globales *ev_gl, float dt)
 	}
 }
 
-void registrar_resultado(eventos_globales *ev_gl, int num_jugador, RESULTADO_GOLPE tipo)
+void registrar_resultado(event_global *ev_gl, int num_jugador, RESULTADO_GOLPE tipo)
 {
     jugador *p = &ev_gl->jugadores[num_jugador - 1];
 
@@ -198,7 +206,7 @@ void registrar_resultado(eventos_globales *ev_gl, int num_jugador, RESULTADO_GOL
     p->puntaje += (int)(puntos_base * p->multiplicador);
 }
 
-void iniciar_flujo_fin_partida(eventos_globales *ev_gl)
+void iniciar_flujo_fin_partida(event_global *ev_gl)
 {
     if (ev_gl->jugadores[0].puntaje > 0)
     {
@@ -220,7 +228,7 @@ void iniciar_flujo_fin_partida(eventos_globales *ev_gl)
     }
 }
 
-ESTADO_ACTUAL pantalla_ranking(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL pantalla_ranking(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento;
 
@@ -252,7 +260,7 @@ ESTADO_ACTUAL pantalla_ranking(eventos_globales *ev_gl, SDL_Event *evento, menu_
 	return ESTADO_RANKING;
 }
 
-ESTADO_ACTUAL pantalla_detalle_jugador(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL pantalla_detalle_jugador(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento; /* evitar warning, ignorar */
 
@@ -293,7 +301,7 @@ ESTADO_ACTUAL pantalla_detalle_jugador(eventos_globales *ev_gl, SDL_Event *event
 	return ESTADO_DETALLE_JUGADOR;
 }
 
-ESTADO_ACTUAL pantalla_ingresar_nombre(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL pantalla_ingresar_nombre(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento; /*evita warning, ignorar */
 

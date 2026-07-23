@@ -10,7 +10,7 @@
 #include "generador_niveles.h"
 
 void listar_niveles(void);
-void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada);
+void generar_playlist_aleatoria(event_global *ev_gl, int dificultad_deseada);
 
 void sincronizar_biblioteca_audio(void);
 
@@ -64,12 +64,13 @@ void listar_niveles(void)
     fclose(archivo_salida);
 }
 
-void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada)
+void generar_playlist_aleatoria(event_global *ev_gl, int dificultad_deseada)
 {
     listar_niveles();
 
     FILE *db = fopen("./niveles_db.txt", "r");
-    if (!db) {
+    if (!db)
+    {
         game_log(LOG_ERROR, "No se pudo leer niveles_db.txt", 0);
         ev_gl->playlist.modo_playlist = false;
         return;
@@ -77,7 +78,7 @@ void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada)
 
     char linea[512];
     char rutas_filtradas[128][512];
-    int ids_filtrados[128]; /* Nuevo: Almacena el ID único de la canción */
+    int ids_filtrados[128]; /* NOTA: Almacena el ID ynico de la cancion */
     int total_filtradas = 0;
 
     if (!fgets(linea, sizeof(linea), db)) {
@@ -113,7 +114,8 @@ void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada)
 
     int indices_usados[MAX_CANCIONES_PLAYLIST] = {-1, -1, -1, -1};
     int ids_usados[MAX_CANCIONES_PLAYLIST] = {-1, -1, -1, -1}; 
-    for (int i = 0; i < ev_gl->playlist.cantidad; i++) {
+    for (int i = 0; i < ev_gl->playlist.cantidad; i++)
+    {
         int idx_elegido;
         int repetido;
         int iteraciones_seguridad = 0;
@@ -164,7 +166,7 @@ void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada)
     }
 }
 
-ESTADO_ACTUAL seleccionar_niveles(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL seleccionar_niveles(event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
     SDL_SetRenderDrawColor(ev_gl->renderizado, 10, 15, 30, 255);
     SDL_RenderClear(ev_gl->renderizado);
@@ -229,8 +231,10 @@ void sincronizar_biblioteca_audio(void)
     }
 
     while ((entry = readdir(dir)) != NULL) {
-        /* Filtrar solo archivos .ogg */
-        if (strstr(entry->d_name, ".ogg")) {
+        /*soporte para ogg y mp3 */
+        if (strstr(entry->d_name, ".ogg") || strstr(entry->d_name, ".OGG") ||
+            strstr(entry->d_name, ".mp3") || strstr(entry->d_name, ".MP3")) {
+            
             char ruta_audio[512];
             char ruta_test_nivel[512];
             snprintf(ruta_audio, sizeof(ruta_audio), "%s%s", carpeta_musica, entry->d_name);
@@ -242,7 +246,6 @@ void sincronizar_biblioteca_audio(void)
             if (!f_test) {
                 game_log(LOG_INFO, "Nuevo audio detectado. Generando mapas y metadatos...", entry->d_name);
                 MetadatosCancion meta;
-                /* 0 indica generar las 3 dificultades */
                 procesar_cancion_y_metadatos(ruta_audio, id_nivel, 0, &meta); 
             } else {
                 fclose(f_test);

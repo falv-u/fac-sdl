@@ -27,18 +27,15 @@ typedef struct {
 	float tiempo_jugado;
 } EntradaRanking;
 
-/* tabla de ranking en memoria, cargada/guardada desde ranking.txt */
-extern EntradaRanking tabla_ranking[MAX_RANKING];
-extern int cantidad_ranking;
-
 void ranking_cargar(void);
 void ranking_guardar(void);
 void ranking_agregar(const char *nombre, int puntaje, int perfect, int good, int bad, int miss, float tiempo_jugado);
 void ranking_ordenar(void); /* bubble sort de mayor a menor puntaje, 90% seguro que se llamaba bubble sort */
 
-void reiniciar_puntajes(eventos_globales *ev_gl);
-void registrar_resultado(eventos_globales *ev_gl, int jugador, RESULTADO_GOLPE tipo);
-void actualizar_ki_y_tiempo(eventos_globales *ev_gl, float dt);
-void iniciar_flujo_fin_partida(eventos_globales *ev_gl);
+void reiniciar_puntajes(event_global *ev_gl);
+void registrar_resultado(event_global *ev_gl, int jugador, RESULTADO_GOLPE tipo);
+void actualizar_ki_y_tiempo(event_global *ev_gl, float dt);
+void iniciar_flujo_fin_partida(event_global *ev_gl);
 
+int ranking_obtener_cantidad(void);
 #endif

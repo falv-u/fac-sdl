@@ -1,45 +1,45 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <time.h>
+
 #include "log.h"
 #include "commons.h"
 
 static const nivel_log NIVEL_MINIMO = LOG_LEVEL;
-void tiempo_actual();
 
-void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...)
+void
+game_log(nivel_log level, const char *mensaje, ...)
 {
+	va_list	ls_argumentos;
 
-	if (level < NIVEL_MINIMO) {
+	if (level < NIVEL_MINIMO)
 		return;
-	}
+		
 	switch (level) {
 	case LOG_DEBUG:
 		// Verde
-		printf("\033[0;32m[DEBUG]\033[0m %s\n", mensaje);
+		printf("\033[0;32m[DEBUG]\033[0m");
 		break;
 
 	case LOG_INFO:
 		// normal
-		printf("[INFO] %s\n", mensaje);
+		printf("[INFO]");
 		break;
 
 	case LOG_WARN:
 		// Amarillo
-		printf("\033[0;33m[WARN]\033[0m %s\n", mensaje);
+		printf("\033[0;33m[WARN]\033[0m");
 		break;
 
 	case LOG_ERROR:
 		// Rojo y dirigido a stderr (salida de errores)
-		fprintf(stderr, "\033[0;31m[ERROR]\033[0m %s\n", mensaje);
+		fprintf(stderr, "\033[0;31m[ERROR]\033[0m ");
 		break;
 	}
-}
 
-void tiempo_actual()
-{
-    time_t tiempo_actual;
-    
-    time(&tiempo_actual);
+	va_start(ls_argumentos, mensaje);
+
+	vfprintf(stdout, mensaje, ls_argumentos);
+
+	va_end(ls_argumentos);
+	printf("\n");
 }

@@ -2,6 +2,7 @@
 #define COMMONS_H
 /* standar headers */
 #include <stdbool.h>
+
 /* SDL libs */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
@@ -53,6 +54,7 @@ typedef struct {
     int escala;        // Factor de escalado
 } ElementosMenu;
 
+
 typedef struct {
 	/* menu_principal */
 	SDL_Rect jugar;
@@ -79,6 +81,7 @@ typedef struct {
 	Mix_Music *musica_fondo;
 	Mix_Chunk *sfx_opcion;
 	int opcion;
+
 } menu_principal_recursos;
 
 /*--------------------------------------------------------------*/
@@ -112,13 +115,13 @@ typedef struct {
 	Nota *arreglo_notas;
 	int total_notas;
 	int notas_pasadas;
-} MapaCancion;
+} Mapa;
 
 typedef struct {
 	bool single_player;
 	bool niveles_aleatorios;
 	int dificultad;
-} tipo_partida;
+} tipo_part;
 
 /* ---------------------------------------------- */
 
@@ -163,12 +166,14 @@ typedef struct {
 	float intensidad_pared;
 	SDL_Color color_pared;
 } jugador;
+
 typedef struct {
 	SDL_Window *ventana;
 	SDL_Renderer *renderizado;
 	bool corriendo;
 	int last_frame_time;
 	ESTADO_ACTUAL estado_juego;
+	bool pausado;
 
 	float tiempo_juego;
 	int indice_nota_actual;
@@ -176,7 +181,7 @@ typedef struct {
 	menu_principal_recursos rec_menu;
 	float iris_radius;
 	bool is_iris_fading_out;
-	MapaCancion mapa_actual;
+	Mapa mapa_actual;
 
 	PlaylistDificultad playlist;
 	Mix_Music *musica_nivel_actual;
@@ -190,7 +195,7 @@ typedef struct {
 	int jugador_pidiendo_nombre; /* 0 = nadie, 1 o 2 segun jugador */
 	int ranking_cursor;         /* fila seleccionada en la pantalla de ranking */
 	int ranking_detalle_indice; /* que fila se esta mostrando en detalle */
-} eventos_globales;
+} event_global;
 
 /* otros, para efectos visuales y demas */
 typedef enum {
@@ -215,23 +220,24 @@ typedef struct {
 
 /* renderizado en pantalla */
 void Pantalla_Completa(SDL_Window *ventana);
-void update(float delta_time, eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+void update(float delta_time, event_global *ev_gl, menu_principal_recursos *rec_menu);
 void assets_load(void);
-void activar_efecto_pared(eventos_globales *ev_gl, int jugador, int resultado); 
+void activar_efecto_pared(event_global *ev_gl, int jugador, int resultado); 
 
 /* primitivas de ESTADO_JUEGO*/
-ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
-ESTADO_ACTUAL seleccionar_niveles(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
-void generar_playlist_aleatoria(eventos_globales *ev_gl, int dificultad_deseada);
-ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento, TTF_Font *fuente);
+ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL seleccionar_niveles(event_global *ev_gl, menu_principal_recursos *rec_menu);
+void generar_playlist_aleatoria(event_global *ev_gl, int dificultad_deseada);
+ESTADO_ACTUAL juego_principal(event_global *ev_gl, SDL_Event *evento, TTF_Font *fuente);
 
 /* primitivas de selector de niveles */
-MapaCancion cargar_nivel(const char *ruta_archivo);
-MapaCancion cargar_nivel_desde_lista(int indice_elegido);
+Mapa cargar_nivel(const char *ruta_archivo);
+Mapa cargar_nivel_desde_lista(int indice_elegido);
 
 /* primitivas de ranking / fin de partida */
-ESTADO_ACTUAL pantalla_ranking(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
-ESTADO_ACTUAL pantalla_detalle_jugador(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
-ESTADO_ACTUAL pantalla_ingresar_nombre(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_ranking(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_detalle_jugador(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
+ESTADO_ACTUAL pantalla_ingresar_nombre(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu);
 
 #endif

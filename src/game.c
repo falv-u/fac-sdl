@@ -4,13 +4,15 @@
 #include "ranking.h"
 
 /*solo estetica, no afecta jugabilidad */
-void dibujar_barras(eventos_globales *);
-void grid_pseudo3d(eventos_globales *);
+void dibujar_barras(event_global *);
+void grid_pseudo3d(event_global *);
 
 void renderizar_texto_juego(SDL_Renderer *renderizado, TTF_Font *fuente, const char *texto, int x, int y, SDL_Color color);
-void dibujar_marcadores(eventos_globales *ev_gl, TTF_Font *fuente);
+void dibujar_marcadores(event_global *ev_gl, TTF_Font *fuente);
 
-ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento, TTF_Font *fuente)
+void dibujar_menu_pausa(event_global *ev_gl, TTF_Font *fuente);
+
+ESTADO_ACTUAL juego_principal(event_global *ev_gl, SDL_Event *evento, TTF_Font *fuente)
 {
 
 	(void)evento; /* evita warning, ignora */
@@ -70,11 +72,17 @@ ESTADO_ACTUAL juego_principal(eventos_globales *ev_gl, SDL_Event *evento, TTF_Fo
 	}
 
 	dibujar_marcadores(ev_gl, fuente);
+
+	if (ev_gl->pausado)
+  {
+    dibujar_menu_pausa(ev_gl, fuente);
+  }
+
 	SDL_RenderPresent(ev_gl->renderizado);
 	return ESTADO_JUEGO;
 }
 
-void dibujar_barras(eventos_globales *ev_gl)
+void dibujar_barras(event_global *ev_gl)
 {
     SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_BLEND);
 
@@ -118,7 +126,7 @@ void dibujar_barras(eventos_globales *ev_gl)
     SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_NONE);
 }
 
-void grid_pseudo3d(eventos_globales *ev_gl)
+void grid_pseudo3d(event_global *ev_gl)
 {
 	SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(ev_gl->renderizado, 150, 0, 150, 100); /* Violeta translúcido */
@@ -176,7 +184,7 @@ void renderizar_texto_juego(SDL_Renderer *renderizado, TTF_Font *fuente, const c
 	SDL_DestroyTexture(tex);
 }
 
-void dibujar_marcadores(eventos_globales *ev_gl, TTF_Font *fuente)
+void dibujar_marcadores(event_global *ev_gl, TTF_Font *fuente)
 {
     char buffer_numeros[32];
     SDL_Color color_blanco = { 255, 255, 255, 255 };
@@ -234,4 +242,19 @@ void dibujar_marcadores(eventos_globales *ev_gl, TTF_Font *fuente)
         snprintf(buffer_numeros, sizeof(buffer_numeros), "Bono: %d", jug->bono_acumulado);
         renderizar_texto_juego(ev_gl->renderizado, fuente, buffer_numeros, x_bono, 15, color_bono);
     }
+}
+
+void dibujar_menu_pausa(event_global *ev_gl, TTF_Font *fuente)
+{
+    SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 180); /* Negro con alpha 180 */
+    SDL_Rect overlay = { 0, 0, ANCHO_PANTALLA, LARGO_PANTALLA };
+    SDL_RenderFillRect(ev_gl->renderizado, &overlay);
+    SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_NONE);
+
+    SDL_Color color_pausa = { 255, 255, 0, 255 }; /* Amarillo */
+    renderizar_texto_juego(ev_gl->renderizado, fuente, "PAUSA", (ANCHO_PANTALLA / 2) - 60, (LARGO_PANTALLA / 2) - 40, color_pausa);
+
+    SDL_Color color_blanco = { 255, 255, 255, 255 };
+    renderizar_texto_juego(ev_gl->renderizado, fuente, " 'P' para reanudar", (ANCHO_PANTALLA / 2) - 180, (LARGO_PANTALLA / 2) + 20, color_blanco);
 }

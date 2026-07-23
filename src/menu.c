@@ -5,18 +5,17 @@
 #include "SDL_image.h"
 #include "commons.h"
 
-void renderizar_fractales(eventos_globales ev_gl);
-void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
-void fade_iris_out(eventos_globales *ev_gl);
+void fondo_menu(event_global *ev_gl, menu_principal_recursos *rec_menu);
+void fade_iris_out(event_global *ev_gl);
 
-void grid_menu_3d(eventos_globales *ev_gl);
+void grid_menu_3d(event_global *ev_gl);
 void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
-void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+void opciones_menu(event_global *ev_gl, menu_principal_recursos *rec_menu);
 
-ESTADO_ACTUAL pantalla_carga(eventos_globales *ev_gl, menu_principal_recursos *rec_menu);
+// ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_principal_recursos *rec_menu);
 
-ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
 {
 	(void)evento; /* para eliminar warning, no relevante */
 
@@ -35,9 +34,8 @@ ESTADO_ACTUAL menu_principal(eventos_globales *ev_gl, SDL_Event *evento, menu_pr
 	return ESTADO_MENU;
 }
 
-void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+void opciones_menu(event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
-
 	/* ns: no_select, s: select */
 	SDL_Rect src_opcion_s = {0*64, 5*64, 64*2, 64*2};
 	SDL_Rect src_opcion_ns = {0*64, 6*64, 64*2, 64*2};
@@ -52,7 +50,7 @@ void opciones_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
 	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_ns, &dest_opcion_ns_2);
 	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_s, &dest_opcion_s);
 }
-void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+void fondo_menu(event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
 		grid_menu_3d(ev_gl);
 
@@ -136,7 +134,7 @@ void fondo_menu(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
    }
 }
 
-void grid_menu_3d(eventos_globales *ev_gl)
+void grid_menu_3d(event_global *ev_gl)
 {
     SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(ev_gl->renderizado, 255, 0, 255, 100); /* Magenta translúcido */
@@ -182,7 +180,7 @@ void grid_menu_3d(eventos_globales *ev_gl)
     SDL_SetRenderDrawBlendMode(ev_gl->renderizado, SDL_BLENDMODE_NONE);
 }
 
-void fade_iris_out(eventos_globales *ev_gl)
+void fade_iris_out(event_global *ev_gl)
 {
 	SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
 
@@ -251,48 +249,95 @@ void pintar_gradiente_noche_menu(SDL_Renderer *render)
         - No tengo portada aun asi que basicamente se vuelve loca al no encontrarla
         - otros bugs menores
 */
-ESTADO_ACTUAL pantalla_carga(eventos_globales *ev_gl, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
-    SDL_SetRenderDrawColor(ev_gl->renderizado, 0, 0, 0, 255);
-    SDL_RenderClear(ev_gl->renderizado);
+    /* Las variables estaticas mantienen su valor entre los llamados de funcion...o eso dice el manual */
+    static bool inicializado = false;
+    static SDL_Texture *tex_portada = NULL;
+    static SDL_Texture *tex_tit = NULL;
+    static SDL_Texture *tex_dur = NULL;
+    static unsigned int tiempo_inicio = 0;
 
-    int idx = ev_gl->playlist.actual;
-    char *ruta_portada = ev_gl->playlist.portadas[idx];
-    char *titulo = ev_gl->playlist.titulos[idx];
-    float duracion = ev_gl->playlist.duraciones[idx];
+    if (!inicializado) {
+        Mix_HaltMusic(); /* Detener mus del menu */
 
-    SDL_Texture *tex_portada = IMG_LoadTexture(ev_gl->renderizado, ruta_portada);
-    if (tex_portada) {
-        SDL_Rect dest_portada = { (ANCHO_PANTALLA / 2) - 150, (LARGO_PANTALLA / 2) - 200, 300, 300 };
-        SDL_RenderCopy(ev_gl->renderizado, tex_portada, NULL, &dest_portada);
-        SDL_DestroyTexture(tex_portada);
+        int idx = ev_gl->playlist.actual;
+        char *ruta_portada = ev_gl->playlist.portadas[idx];
+        char *titulo = ev_gl->playlist.titulos[idx];
+        float duracion = ev_gl->playlist.duraciones[idx];
+
+        /* intentar cargar portada */
+        tex_portada = IMG_LoadTexture(ev_gl->renderizado, ruta_portada);
+
+        if (rec_menu->fuente) {
+            SDL_Color blanco = {255, 255, 255, 255};
+            char buffer_duracion[32];
+            snprintf(buffer_duracion, sizeof(buffer_duracion), "Duracion: %d:%02d", (int)(duracion / 60), (int)duracion % 60);
+
+            /* renderiza */
+            SDL_Surface *surf_tit = TTF_RenderText_Solid(rec_menu->fuente, titulo, blanco);
+            SDL_Surface *surf_dur = TTF_RenderText_Solid(rec_menu->fuente, buffer_duracion, blanco);
+
+            /* crea textura y libera memoria NO OLVIDAR EL FREE */
+            if (surf_tit) {
+                tex_tit = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_tit);
+                SDL_FreeSurface(surf_tit);
+            }
+            if (surf_dur) {
+                tex_dur = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_dur);
+                SDL_FreeSurface(surf_dur);
+            }
+        }
+
+        tiempo_inicio = SDL_GetTicks();
+        inicializado = true;
     }
 
-    if (rec_menu->fuente) {
-        SDL_Color blanco = {255, 255, 255, 255};
-        char buffer_duracion[32];
-        snprintf(buffer_duracion, sizeof(buffer_duracion), "Duracion: %d:%02d", (int)(duracion / 60), (int)duracion % 60);
+    SDL_SetRenderDrawColor(ev_gl->renderizado, 15, 15, 20, 255); /* color arbitrario btw */
+    SDL_RenderClear(ev_gl->renderizado);
 
-        SDL_Surface *surf_tit = TTF_RenderText_Solid(rec_menu->fuente, titulo, blanco);
-        SDL_Surface *surf_dur = TTF_RenderText_Solid(rec_menu->fuente, buffer_duracion, blanco);
+    SDL_Rect dest_portada = { (ANCHO_PANTALLA / 2) - 150, (LARGO_PANTALLA / 2) - 200, 300, 300 };
+    
+    if (tex_portada)
+    {
+        SDL_RenderCopy(ev_gl->renderizado, tex_portada, NULL, &dest_portada);
+    } else {
+        SDL_SetRenderDrawColor(ev_gl->renderizado, 50, 50, 50, 255);
+        SDL_RenderFillRect(ev_gl->renderizado, &dest_portada); 
+    }
 
-        if (surf_tit && surf_dur) {
-            SDL_Texture *tex_tit = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_tit);
-            SDL_Texture *tex_dur = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf_dur);
-
-            SDL_Rect rect_tit = { (ANCHO_PANTALLA / 2) - (surf_tit->w / 2), (LARGO_PANTALLA / 2) + 120, surf_tit->w, surf_tit->h };
-            SDL_Rect rect_dur = { (ANCHO_PANTALLA / 2) - (surf_dur->w / 2), (LARGO_PANTALLA / 2) + 180, surf_dur->w, surf_dur->h };
-
-            SDL_RenderCopy(ev_gl->renderizado, tex_tit, NULL, &rect_tit);
-            SDL_RenderCopy(ev_gl->renderizado, tex_dur, NULL, &rect_dur);
-
-            SDL_DestroyTexture(tex_tit);
-            SDL_DestroyTexture(tex_dur);
-            SDL_FreeSurface(surf_tit);
-            SDL_FreeSurface(surf_dur);
-        }
+    if (tex_tit)
+    {
+        int w, h;
+        SDL_QueryTexture(tex_tit, NULL, NULL, &w, &h);
+        SDL_Rect rect_tit = { (ANCHO_PANTALLA / 2) - (w / 2), (LARGO_PANTALLA / 2) + 120, w, h };
+        SDL_RenderCopy(ev_gl->renderizado, tex_tit, NULL, &rect_tit);
+    }
+    if (tex_dur)
+    {
+        int w, h;
+        SDL_QueryTexture(tex_dur, NULL, NULL, &w, &h);
+        SDL_Rect rect_dur = { (ANCHO_PANTALLA / 2) - (w / 2), (LARGO_PANTALLA / 2) + 180, w, h };
+        SDL_RenderCopy(ev_gl->renderizado, tex_dur, NULL, &rect_dur);
     }
 
     SDL_RenderPresent(ev_gl->renderizado);
+
+    /* NOTA: 2 segundos*/
+    if (SDL_GetTicks() - tiempo_inicio > 2000)
+    {
+        if (tex_portada) SDL_DestroyTexture(tex_portada);
+        if (tex_tit) SDL_DestroyTexture(tex_tit);
+        if (tex_dur) SDL_DestroyTexture(tex_dur);
+        
+        inicializado = false; /* Resetear */
+        
+        // if (ev_gl->musica_nivel_actual)
+        //     Mix_PlayMusic(ev_gl->musica_nivel_actual, 0); 
+        
+        
+        return ESTADO_JUEGO;
+    }
+
     return ESTADO_CARGA;
 }

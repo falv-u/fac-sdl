@@ -8,6 +8,6 @@ typedef enum {
 	LOG_ERROR  // 3
 } nivel_log;
 
-void game_log(nivel_log level, const char *mensaje, const char *mensaje_SDL, ...);
+void game_log(nivel_log level, const char *mensaje, ...);
 
 #endif

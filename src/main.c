@@ -21,11 +21,10 @@
 #include "ranking.h"
 #include "log.h"
 
-
-void	 iniciar_componente();
+void	 iniciar_componente(void);
 void	 iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl);
 void	 iniciar_event_global(event_global *ev_gl);
-void	 manejo_delta_time(float *delta_time, unsigned int *last_frame_time);
+void	 manejo_delta_time(float *delta_time, unsigned int *last_frame_time, event_global *ev_gl);
 void	 manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event);
 
 void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event evento);
@@ -41,15 +40,13 @@ void	 botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_p
 
 bool	 es_alfombra_de_baile(SDL_GameController *mando);
 Mapa	 cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
-
+// void	 ingresar_nombre();
 
 void	 apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu);
 
 int
 main(void)
 {
-
-
 	menu_principal_recursos	rec_menu;	
 	event_global		ev_gl;
 	unsigned int		last_frame_time;
@@ -71,23 +68,10 @@ main(void)
 
 	ranking_cargar();
 
-	for (i = 0; i < SDL_NumJoysticks(); i++) {
-		if (!SDL_IsGameController(i))
-			continue;
-		ev_gl.jugadores[0].mando = SDL_GameControllerOpen(i);
-		if (ev_gl.jugadores[0].mando == NULL)
-			continue;
-		game_log(LOG_INFO, "Mando pre-conectado detectado y asignado");
-	}
-
 	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
-	while (ev_gl.corriendo)
-	{
-		manejo_delta_time(&delta_time, &last_frame_time);
-
-		if (ev_gl.estado_juego == ESTADO_JUEGO && ev_gl.pausado == true)
-			delta_time = 0.0f;
+	while (ev_gl.corriendo) {
+		manejo_delta_time(&delta_time, &last_frame_time, &ev_gl);
 
 		update(delta_time, &ev_gl,  &rec_menu);
 
@@ -108,52 +92,50 @@ void
 manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event evento)
 {
 	
-		switch (ev_gl->estado_juego) {
+	switch (ev_gl->estado_juego) {
 
-		case ESTADO_MENU:
-			ev_gl->estado_juego=menu_principal(ev_gl, &evento, rec_menu);
-			break;
-		case ESTADO_CARGA:
-			ev_gl->estado_juego=pantalla_carga(ev_gl,rec_menu);
-			break;
-		case ESTADO_SELECT_TIPO_PARTIDA:
-			break;
-		case ESTADO_SELECT_NIVELES:
-			ev_gl->estado_juego = seleccionar_niveles(ev_gl, rec_menu);
-			break;
-		case ESTADO_JUEGO:
-			ev_gl->estado_juego=juego_principal(ev_gl, &evento, rec_menu->fuente);
-			break;
-		case ESTADO_GAMEOVER:
-			break;
-		case ESTADO_INGRESAR_NOMBRE:
-			ev_gl->estado_juego = pantalla_ingresar_nombre(ev_gl, &evento, rec_menu);
-			break;
-		case ESTADO_RANKING:
-			ev_gl->estado_juego = pantalla_ranking(ev_gl, &evento, rec_menu);
-			break;
-		case ESTADO_DETALLE_JUGADOR:
-			ev_gl->estado_juego = pantalla_detalle_jugador(ev_gl, &evento, rec_menu);
-			break;
-		case ESTADO_SALIR:
-			ev_gl->corriendo = false;
-			game_log(LOG_DEBUG, "ESTADO_SALIR HA SIDO RETORNADO POR UNA FUNCION", 0);
-			break;
-		default:
-			break;
-		}
+	case ESTADO_MENU:
+		ev_gl->estado_juego=menu_principal(ev_gl, &evento, rec_menu);
+		break;
+	case ESTADO_CARGA:
+		ev_gl->estado_juego=pantalla_carga(ev_gl,rec_menu);
+		break;
+	case ESTADO_SELECT_TIPO_PARTIDA:
+		break;
+	case ESTADO_SELECT_NIVELES:
+		ev_gl->estado_juego = seleccionar_niveles(ev_gl, rec_menu);
+		break;
+	case ESTADO_JUEGO:
+		ev_gl->estado_juego=juego_principal(ev_gl, &evento, rec_menu->fuente);
+		break;
+	case ESTADO_GAMEOVER:
+		break;
+	case ESTADO_INGRESAR_NOMBRE:
+		ev_gl->estado_juego = pantalla_ingresar_nombre(ev_gl, &evento, rec_menu);
+		break;
+	case ESTADO_RANKING:
+		ev_gl->estado_juego = pantalla_ranking(ev_gl, &evento, rec_menu);
+		break;
+	case ESTADO_DETALLE_JUGADOR:
+		ev_gl->estado_juego = pantalla_detalle_jugador(ev_gl, &evento, rec_menu);
+		break;
+	case ESTADO_SALIR:
+		ev_gl->corriendo = false;
+		game_log(LOG_DEBUG, "ESTADO_SALIR HA SIDO RETORNADO POR UNA FUNCION", 0);
+		break;
+	default:
+		break;
+	}
 }
 
 void
 apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu)
 {
 	int	i;
-
 	/*
 	 * se supone que es automatico, pero es buena practica cerrar
 	 * cerrar lo que abriste
 	 */
-
 	for (i = 0; i < MAX_PLAYERS; i++) {
 		if (ev_gl->jugadores[i].mando != NULL) {
 			SDL_GameControllerClose(ev_gl->jugadores[i].mando);
@@ -217,54 +199,65 @@ iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl)
 	rec_menu->musica_fondo= Mix_LoadMUS("./assets/sfx/menu.mp3");
 	rec_menu->sfx_opcion = Mix_LoadWAV("./assets/sfx/ui-menu-onset.ogg");
 
-	if (rec_menu->fuente) 
-	{
-        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
-        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
-        rec_menu->titulo_w = surf->w;
-        rec_menu->titulo_h = surf->h;
-        SDL_FreeSurface(surf);
-   }
+	if (rec_menu->fuente) {
+	        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
+	        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
+	        rec_menu->titulo_w = surf->w;
+	        rec_menu->titulo_h = surf->h;
+	        SDL_FreeSurface(surf);
+	}
 
 	rec_menu->scroll_edificios = 0.0f;
-   rec_menu->vel_edificios = 300.0f;
+	rec_menu->vel_edificios = 300.0f;
 
 	if (rec_menu->musica_fondo)
 		Mix_PlayMusic(rec_menu->musica_fondo, -1);
 }
 
-void iniciar_event_global(event_global
-                         *ev_gl)
+void
+iniciar_event_global(event_global *ev_gl)
 {
-    ev_gl->estado_juego = ESTADO_MENU;
-    ev_gl->corriendo = true;
-   	ev_gl->pausado = false; 
-    ev_gl->ventana = crear_ventana();
-    ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
-    ev_gl->iris_radius = 800.0;
-    ev_gl->is_iris_fading_out = false;
-    ev_gl->jugadores[0].mando = NULL;
-    ev_gl->jugadores[1].mando = NULL;
+	int i;
+	
+	ev_gl->estado_juego = ESTADO_MENU;
+	ev_gl->corriendo = true;
+	ev_gl->pausado = false; 
+	ev_gl->ventana = crear_ventana();
+	ev_gl->renderizado = SDL_CreateRenderer(ev_gl->ventana, -1, SDL_RENDERER_ACCELERATED);
+	ev_gl->iris_radius = 800.0;
+	ev_gl->is_iris_fading_out = false;
+	ev_gl->jugadores[0].mando = NULL;
+	ev_gl->jugadores[1].mando = NULL;
+
+	ev_gl->opcion_dificultad = 0;
+	ev_gl->musica_nivel_actual = NULL;
+	SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
+
+	ev_gl->jugadores[0].intensidad_pared = 0.00f;
+	ev_gl->jugadores[1].intensidad_pared = 0.00f;
+
+	reiniciar_puntajes(ev_gl);
+	ev_gl->ranking_cursor = 0;
+	ev_gl->ranking_detalle_indice = 0;
+
     
-    ev_gl->opcion_dificultad = 0;
-    ev_gl->musica_nivel_actual = NULL;
-    SDL_RenderSetLogicalSize(ev_gl->renderizado, ANCHO_PANTALLA, LARGO_PANTALLA);
 
-    ev_gl->jugadores[0].intensidad_pared = 0.00f;
-    ev_gl->jugadores[1].intensidad_pared = 0.00f;
-
-    reiniciar_puntajes(ev_gl);
-    ev_gl->ranking_cursor = 0;
-    ev_gl->ranking_detalle_indice = 0;
+	for (i = 0; i < SDL_NumJoysticks(); i++) {
+		if (!SDL_IsGameController(i))
+			continue;
+		ev_gl->jugadores[0].mando = SDL_GameControllerOpen(i);
+		if (ev_gl->jugadores[0].mando == NULL)
+			continue;
+		game_log(LOG_INFO, "Mando pre-conectado detectado y asignado");
+	}
 }
 
-void event_global_accionados_simples(event_global
-                                 *ev_gl, SDL_Event evento)
+void
+event_global_accionados_simples(event_global *ev_gl, SDL_Event evento)
 {
-	if (evento.type == SDL_QUIT) 
-	{
-			game_log(LOG_INFO, "Cerrando ventana por accion del usuario a traves del servidor grafico ", 0);
-			ev_gl->corriendo = false;
+	if (evento.type == SDL_QUIT) {
+		game_log(LOG_INFO, "Cerrando ventana por accion del usuario a traves del servidor grafico ");
+		ev_gl->corriendo = false;
 	}
 
 	if (evento.type == SDL_KEYDOWN &&  evento.key.repeat == 0)
@@ -280,7 +273,8 @@ void event_global_accionados_simples(event_global
 
 }
 
-void iniciar_componente()
+void
+iniciar_componente(void)
 {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) 
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
@@ -298,37 +292,89 @@ void iniciar_componente()
 	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
 }
 
-void manejo_delta_time(float *delta_time, unsigned int *last_frame_time)
+void
+manejo_delta_time(float *dt, unsigned int *last_frame_time, event_global *ev_gl)
 {
 	unsigned int current_time = SDL_GetTicks();
+	unsigned int frame_duration = SDL_GetTicks() - current_time;
 
-	*delta_time = (current_time - *last_frame_time) / 1000.0f;
+	*dt = (current_time - *last_frame_time) / 1000.0f;
 
 	*last_frame_time = SDL_GetTicks();
 
-	if (*delta_time > 0.1f) *delta_time = 0.1f;
+	if (*dt > 0.1f)
+		*dt = 0.1f;
 
 	*last_frame_time = current_time;	
 
-	unsigned int frame_duration = SDL_GetTicks() - current_time;
 	if (frame_duration < FRAME_TARGET_TIME)
 		SDL_Delay(FRAME_TARGET_TIME - frame_duration);
+
+	if (ev_gl->estado_juego == ESTADO_JUEGO && ev_gl->pausado == true)
+		*dt = 0.0f;
 }
 
-void eventos_accionados_usuario(event_global
-                         *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void
+ingresar_nombre(event_global *ev_gl, SDL_Event ev)
 {
-	while (SDL_PollEvent(&evento))
-		{
-			event_global_accionados_simples(ev_gl,evento);
-			manejo_mando(ev_gl, evento, rec_menu);
 
-			if (evento.type == SDL_TEXTINPUT && ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE)
-			{
-				if (strlen(ev_gl->nombre_ingresado) + strlen(evento.text.text) < sizeof(ev_gl->nombre_ingresado) - 1)
-					strcat(ev_gl->nombre_ingresado, evento.text.text);
-			}
+	int len = strlen(ev_gl->nombre_ingresado);
+	jugador *p1 = &ev_gl->jugadores[0];
+	jugador *p2 = &ev_gl->jugadores[1];
 
+	if (ev.type == SDL_TEXTINPUT && ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE) {
+		if (strlen(ev_gl->nombre_ingresado) + strlen(ev.text.text) < sizeof(ev_gl->nombre_ingresado) - 1)
+			strcat(ev_gl->nombre_ingresado, ev.text.text);
+	}
+
+	if (ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE) {
+		if (ev.key.keysym.sym == SDLK_BACKSPACE && len > 0) 
+			ev_gl->nombre_ingresado[len - 1] = '\0';
+	
+	if (ev.key.keysym.sym == SDLK_RETURN && len > 0) {
+	if (ev_gl->jugador_pidiendo_nombre == 1) {
+	ranking_agregar(ev_gl->nombre_ingresado,
+	                p1->puntaje + p1->bono_acumulado,
+			p1->perfect, p1->good, p1->bad, p1->miss,
+			p1->tiempo_jugado);
+
+	if (ev_gl->jugadores[1].puntaje > 0)
+	{
+	ev_gl->jugador_pidiendo_nombre = 2;
+	ev_gl->nombre_ingresado[0] = '\0';
+	}
+	else
+	{
+	SDL_StopTextInput();
+	ranking_ordenar();
+	ranking_guardar();
+	ev_gl->ranking_cursor = 0;
+	ev_gl->estado_juego = ESTADO_RANKING;
+	}
+	}
+	else if (ev_gl->jugador_pidiendo_nombre == 2)
+	{
+	jugador *p2 = &ev_gl->jugadores[1];
+
+	ranking_agregar(ev_gl->nombre_ingresado, p2->puntaje + p2->bono_acumulado,
+	p2->perfect, p2->good, p2->bad, p2->miss, p2->tiempo_jugado);
+
+	SDL_StopTextInput();
+	ranking_ordenar();
+	ranking_guardar();
+	ev_gl->ranking_cursor = 0;
+	ev_gl->estado_juego = ESTADO_RANKING;
+	}
+	}
+	}
+}
+void
+eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+{
+	while (SDL_PollEvent(&evento)) {
+		event_global_accionados_simples(ev_gl,evento);
+		manejo_mando(ev_gl, evento, rec_menu);
+		ingresar_nombre(ev_gl, evento);
 			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0 || evento.type == SDL_CONTROLLERBUTTONDOWN)
 			{
 				if (ev_gl->estado_juego == ESTADO_MENU) 
@@ -404,53 +450,7 @@ void eventos_accionados_usuario(event_global
 				        }
 				    }
 				}
-				else if (ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE)
-							{
-								if (evento.key.keysym.sym == SDLK_BACKSPACE)
-								{
-									int len = strlen(ev_gl->nombre_ingresado);
-									if (len > 0) ev_gl->nombre_ingresado[len - 1] = '\0';
-								}
-								if (evento.key.keysym.sym == SDLK_RETURN && strlen(ev_gl->nombre_ingresado) > 0)
-								{
-									if (ev_gl->jugador_pidiendo_nombre == 1)
-									{
-										/* Usamos un puntero local para no saturar la llamada de la función */
-										jugador *p1 = &ev_gl->jugadores[0];
-
-										ranking_agregar(ev_gl->nombre_ingresado, p1->puntaje + p1->bono_acumulado,
-											p1->perfect, p1->good, p1->bad, p1->miss, p1->tiempo_jugado);
-
-										/* Si el jugador 2 también jugó y tiene puntaje, le pedimos su nombre */
-										if (ev_gl->jugadores[1].puntaje > 0)
-										{
-											ev_gl->jugador_pidiendo_nombre = 2;
-											ev_gl->nombre_ingresado[0] = '\0';
-										}
-										else
-										{
-											SDL_StopTextInput();
-											ranking_ordenar();
-											ranking_guardar();
-											ev_gl->ranking_cursor = 0;
-											ev_gl->estado_juego = ESTADO_RANKING;
-										}
-									}
-									else if (ev_gl->jugador_pidiendo_nombre == 2)
-									{
-										jugador *p2 = &ev_gl->jugadores[1];
-
-										ranking_agregar(ev_gl->nombre_ingresado, p2->puntaje + p2->bono_acumulado,
-											p2->perfect, p2->good, p2->bad, p2->miss, p2->tiempo_jugado);
-
-										SDL_StopTextInput();
-										ranking_ordenar();
-										ranking_guardar();
-										ev_gl->ranking_cursor = 0;
-										ev_gl->estado_juego = ESTADO_RANKING;
-									}
-								}
-							}
+				else 
 				else if (ev_gl->estado_juego == ESTADO_RANKING)
 				{
 				   if (evento.key.keysym.sym == SDLK_UP && ev_gl->ranking_cursor > 0)
@@ -497,23 +497,24 @@ void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
 		rec_menu->opcion = 2;
 
 
-	if(opcion_anterior != rec_menu->opcion)
-	{
+	if(opcion_anterior != rec_menu->opcion) {
 		if (rec_menu->sfx_opcion)
-    		Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+	    		Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
 	}
 }
 
-void activar_efecto_pared(event_global
-                         *ev_gl, int num_jugador, int resultado) 
+void
+activar_efecto_pared(event_global *ev_gl, int num_jugador, int resultado) 
 {
     jugador *p = &ev_gl->jugadores[num_jugador - 1];
     
     p->intensidad_pared = 1.0f; /* Máximo brillo */
     
     if (resultado == RESULTADO_PERFECT) {
-        if (num_jugador == 1) p->color_pared = (SDL_Color){0, 255, 255, 255}; /* Cyan P1 */
-        else              p->color_pared = (SDL_Color){255, 0, 255, 255}; /* Magenta P2 */
+        if (num_jugador == 1)
+        	p->color_pared = (SDL_Color){0, 255, 255, 255};
+        else
+        	 p->color_pared = (SDL_Color){255, 0, 255, 255}; /* Magenta P2 */
     } 
     else if (resultado == RESULTADO_GOOD) {
         p->color_pared = (SDL_Color){50, 205, 50, 255}; /* Verde */
@@ -522,9 +523,10 @@ void activar_efecto_pared(event_global
         p->color_pared = (SDL_Color){255, 30, 30, 255}; /* Rojo */
     }
 }
-void evaluar_golpe(int carril_presionado, int jugador, event_global
-                 *ev_gl)
+void
+evaluar_golpe(int carril_presionado, int jugador, event_global *ev_gl)
 {
+	int i;
     for (int i = ev_gl->mapa_actual.notas_pasadas; i < ev_gl->mapa_actual.total_notas; i++)
     {
         Nota *n = &ev_gl->mapa_actual.arreglo_notas[i];
@@ -739,4 +741,3 @@ void botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_pr
 			Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
 	}
 }
-

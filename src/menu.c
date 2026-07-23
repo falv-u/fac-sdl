@@ -5,17 +5,17 @@
 #include "SDL_image.h"
 #include "commons.h"
 
-void fondo_menu(event_global *ev_gl, menu_principal_recursos *rec_menu);
+void fondo_menu(event_global *ev_gl, menu_recursos *rec_menu);
 void fade_iris_out(event_global *ev_gl);
 
 void grid_menu_3d(event_global *ev_gl);
 void pintar_gradiente_noche_menu(SDL_Renderer *renderizado);
 
-void opciones_menu(event_global *ev_gl, menu_principal_recursos *rec_menu);
+void opciones_menu(event_global *ev_gl, menu_recursos *rec_menu);
 
-// ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_principal_recursos *rec_menu);
+// ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_recursos *rec_menu);
 
-ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_recursos *rec_menu)
 {
 	(void)evento; /* para eliminar warning, no relevante */
 
@@ -34,7 +34,7 @@ ESTADO_ACTUAL menu_principal(event_global *ev_gl, SDL_Event *evento, menu_princi
 	return ESTADO_MENU;
 }
 
-void opciones_menu(event_global *ev_gl, menu_principal_recursos *rec_menu)
+void opciones_menu(event_global *ev_gl, menu_recursos *rec_menu)
 {
 	/* ns: no_select, s: select */
 	SDL_Rect src_opcion_s = {0*64, 5*64, 64*2, 64*2};
@@ -50,7 +50,7 @@ void opciones_menu(event_global *ev_gl, menu_principal_recursos *rec_menu)
 	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_ns, &dest_opcion_ns_2);
 	SDL_RenderCopy(ev_gl->renderizado, rec_menu->sprites, &src_opcion_s, &dest_opcion_s);
 }
-void fondo_menu(event_global *ev_gl, menu_principal_recursos *rec_menu)
+void fondo_menu(event_global *ev_gl, menu_recursos *rec_menu)
 {
 		grid_menu_3d(ev_gl);
 
@@ -249,7 +249,7 @@ void pintar_gradiente_noche_menu(SDL_Renderer *render)
         - No tengo portada aun asi que basicamente se vuelve loca al no encontrarla
         - otros bugs menores
 */
-ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_principal_recursos *rec_menu)
+ESTADO_ACTUAL pantalla_carga(event_global *ev_gl, menu_recursos *rec_menu)
 {
     /* Las variables estaticas mantienen su valor entre los llamados de funcion...o eso dice el manual */
     static bool inicializado = false;

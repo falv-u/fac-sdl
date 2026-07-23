@@ -1,6 +1,7 @@
 /* Librerias estandar */
 #include <stdbool.h>
 #include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -22,32 +23,33 @@
 #include "log.h"
 
 void	 iniciar_componente(void);
-void	 iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl);
+void	 iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl);
 void	 iniciar_event_global(event_global *ev_gl);
-void	 manejo_delta_time(float *delta_time, unsigned int *last_frame_time, event_global *ev_gl);
-void	 manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event);
+void	 manejo_delta_time(float *dt, unsigned int *l_frame, event_global *ev);
+void	 manejo_estado(event_global *ev, menu_recursos *rec_menu, SDL_Event);
 
-void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event evento);
-void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void	 teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento);
+void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event ev);
+void	 teclas_menu_principal(menu_recursos *rec_menu, SDL_Event ev);
+void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
+/* sub-funciones para eventos accionados por/de usuario */
+void	 ingresar_nombre(event_global *ev_gl, SDL_Event ev);
 
 void	 teclas_juego_principal(event_global *ev_gl, SDL_Event evento);
 void	 evaluar_golpe(int carril_presionado, int jugador, event_global *ev_gl);
 
-void	 manejo_mando(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void	 botones_mando_juego_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
-void	 botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu);
+void	 manejo_mando(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
+void	 botones_mando_juego_principal(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
+void	 botones_mando_menu_principal(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
 
 bool	 es_alfombra_de_baile(SDL_GameController *mando);
 Mapa	 cargar_nivel_humanizado(const char *ruta_archivo, int carril_desde, int carril_hasta);
-// void	 ingresar_nombre();
 
-void	 apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu);
+void	 apagar_sdl(event_global *ev_gl, menu_recursos *rec_menu);
 
 int
 main(void)
 {
-	menu_principal_recursos	rec_menu;	
+	menu_recursos	rec_menu;	
 	event_global		ev_gl;
 	unsigned int		last_frame_time;
 	float 			delta_time;
@@ -89,7 +91,7 @@ main(void)
 }
 
 void
-manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event evento)
+manejo_estado(event_global *ev_gl, menu_recursos *rec_menu, SDL_Event evento)
 {
 	
 	switch (ev_gl->estado_juego) {
@@ -129,7 +131,7 @@ manejo_estado(event_global *ev_gl, menu_principal_recursos *rec_menu, SDL_Event 
 }
 
 void
-apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu)
+apagar_sdl(event_global *ev_gl, menu_recursos *rec_menu)
 {
 	int	i;
 	/*
@@ -178,11 +180,11 @@ apagar_sdl(event_global *ev_gl, menu_principal_recursos *rec_menu)
 }
 
 void
-iniciar_recursos_menu(menu_principal_recursos *rec_menu, event_global *ev_gl)
+iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl)
 {
 	rec_menu->opcion=0;
 	rec_menu->fuente = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
-	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0002.png");
+	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0001.png");
 
 	rec_menu->color1.r = 255;
 	rec_menu->color1.g = 255;
@@ -260,13 +262,11 @@ event_global_accionados_simples(event_global *ev_gl, SDL_Event evento)
 		ev_gl->corriendo = false;
 	}
 
-	if (evento.type == SDL_KEYDOWN &&  evento.key.repeat == 0)
-	{
+	if (evento.type == SDL_KEYDOWN &&  evento.key.repeat == 0) {
 		if (evento.key.keysym.sym == SDLK_F9)
 			Pantalla_Completa(ev_gl->ventana);
-		if (evento.key.keysym.sym == SDLK_ESCAPE)
-		{
-			game_log(LOG_DEBUG, "cierre por fin del loop a traves de la bandera 'corriendo', accionado por tecla ESCAPE", 0);
+		if (evento.key.keysym.sym == SDLK_ESCAPE) {
+			game_log(LOG_DEBUG, "cierre por fin del loop a traves de la bandera 'corriendo', accionado por tecla ESCAPE");
 			ev_gl->corriendo = false;
 		}
 	}
@@ -279,9 +279,9 @@ iniciar_componente(void)
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) 
 		game_log(LOG_ERROR, "SDL no pudo inicializarse! Error: %s\n", SDL_GetError());
 	/* base de datos sdl comunitaria para dispositivos plug */
-	if (SDL_GameControllerAddMappingsFromFile("./gamecontrollerdb.txt") < 0) {
-		game_log(LOG_WARN, "No se encontro gamecontrollerdb.txt o hubo un error", SDL_GetError());
-	}
+	if (SDL_GameControllerAddMappingsFromFile("./gamecontrollerdb.txt") < 0)
+		game_log(LOG_WARN, "No se encontro gamecontrollerdb.txt o hubo un error %s\n", SDL_GetError());
+	
 	if (TTF_Init() == -1) 
 		game_log(LOG_ERROR, "SDL_ttf error: %s\n", TTF_GetError());
 
@@ -289,7 +289,7 @@ iniciar_componente(void)
 		printf("Error: %s\n", Mix_GetError());
 
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n", 0);
+	game_log(LOG_DEBUG, "Componentes de SDL iniciados correctamente!\n");
 }
 
 void
@@ -315,76 +315,18 @@ manejo_delta_time(float *dt, unsigned int *last_frame_time, event_global *ev_gl)
 }
 
 void
-ingresar_nombre(event_global *ev_gl, SDL_Event ev)
-{
-
-	int len = strlen(ev_gl->nombre_ingresado);
-	jugador *p1 = &ev_gl->jugadores[0];
-	jugador *p2 = &ev_gl->jugadores[1];
-
-	if (ev.type == SDL_TEXTINPUT && ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE) {
-		if (strlen(ev_gl->nombre_ingresado) + strlen(ev.text.text) < sizeof(ev_gl->nombre_ingresado) - 1)
-			strcat(ev_gl->nombre_ingresado, ev.text.text);
-	}
-
-	if (ev_gl->estado_juego == ESTADO_INGRESAR_NOMBRE) {
-		if (ev.key.keysym.sym == SDLK_BACKSPACE && len > 0) 
-			ev_gl->nombre_ingresado[len - 1] = '\0';
-	
-	if (ev.key.keysym.sym == SDLK_RETURN && len > 0) {
-	if (ev_gl->jugador_pidiendo_nombre == 1) {
-	ranking_agregar(ev_gl->nombre_ingresado,
-	                p1->puntaje + p1->bono_acumulado,
-			p1->perfect, p1->good, p1->bad, p1->miss,
-			p1->tiempo_jugado);
-
-	if (ev_gl->jugadores[1].puntaje > 0)
-	{
-	ev_gl->jugador_pidiendo_nombre = 2;
-	ev_gl->nombre_ingresado[0] = '\0';
-	}
-	else
-	{
-	SDL_StopTextInput();
-	ranking_ordenar();
-	ranking_guardar();
-	ev_gl->ranking_cursor = 0;
-	ev_gl->estado_juego = ESTADO_RANKING;
-	}
-	}
-	else if (ev_gl->jugador_pidiendo_nombre == 2)
-	{
-	jugador *p2 = &ev_gl->jugadores[1];
-
-	ranking_agregar(ev_gl->nombre_ingresado, p2->puntaje + p2->bono_acumulado,
-	p2->perfect, p2->good, p2->bad, p2->miss, p2->tiempo_jugado);
-
-	SDL_StopTextInput();
-	ranking_ordenar();
-	ranking_guardar();
-	ev_gl->ranking_cursor = 0;
-	ev_gl->estado_juego = ESTADO_RANKING;
-	}
-	}
-	}
-}
-void
-eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_recursos *rec_menu)
 {
 	while (SDL_PollEvent(&evento)) {
 		event_global_accionados_simples(ev_gl,evento);
 		manejo_mando(ev_gl, evento, rec_menu);
-		ingresar_nombre(ev_gl, evento);
-			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0 || evento.type == SDL_CONTROLLERBUTTONDOWN)
-			{
-				if (ev_gl->estado_juego == ESTADO_MENU) 
-				{
+			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0 || evento.type == SDL_CONTROLLERBUTTONDOWN) {
+
+				ingresar_nombre(ev_gl, evento);
+				if (ev_gl->estado_juego == ESTADO_MENU) {
 					teclas_menu_principal(rec_menu, evento);
 
-					if (evento.key.keysym.sym == SDLK_RETURN)
-					{
-						// if (rec_menu->musica_fondo)
-						// 	Mix_PlayMusic(rec_menu->musica_fondo, -1);
+					if (evento.key.keysym.sym == SDLK_RETURN) {
 
 						if (rec_menu->opcion == 0)
 							ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
@@ -395,23 +337,20 @@ eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal
 							ev_gl->estado_juego = ESTADO_RANKING;
 						}
 					}
-				}
-				else if (ev_gl->estado_juego == ESTADO_JUEGO)
+				} else if (ev_gl->estado_juego == ESTADO_JUEGO)
         {
 			    teclas_juego_principal(ev_gl, evento);
-        }
-				else if (ev_gl->estado_juego == ESTADO_SELECT_NIVELES)
-				{
-				    if (evento.key.keysym.sym == SDLK_UP && ev_gl->opcion_dificultad > 0)
-				    {
+        } else if (ev_gl->estado_juego == ESTADO_SELECT_NIVELES) {
+				if (evento.key.keysym.sym == SDLK_UP && ev_gl->opcion_dificultad > 0) {
 				        ev_gl->opcion_dificultad--;
-				        if (rec_menu->sfx_opcion) Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
-				    }
-				    if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->opcion_dificultad < 2)
-				    {
+				if (rec_menu->sfx_opcion)
+				        	Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+				}
+				if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->opcion_dificultad < 2) {
 				        ev_gl->opcion_dificultad++;
-				        if (rec_menu->sfx_opcion) Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
-				    }
+				        if (rec_menu->sfx_opcion)
+						 Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
+				}
 				    if (evento.key.keysym.sym == SDLK_ESCAPE) {
 				        ev_gl->estado_juego = ESTADO_MENU; /* Volver al menú principal */
 				    }
@@ -423,9 +362,9 @@ eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal
 
 				        if (ev_gl->playlist.modo_playlist && ev_gl->playlist.cantidad > 0)
 				        {
-										if (es_alfombra_de_baile(ev_gl->jugadores[0].mando))
-										  ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[0], 0, 3);
-										else
+						if (es_alfombra_de_baile(ev_gl->jugadores[0].mando))
+						  ev_gl->mapa_actual = cargar_nivel_humanizado(ev_gl->playlist.rutas[0], 0, 3);
+						else
 										    ev_gl->mapa_actual = cargar_nivel(ev_gl->playlist.rutas[0]);
 					          ev_gl->tiempo_juego = 0.0f;
 					          ev_gl->musica_iniciada = false;
@@ -438,13 +377,7 @@ eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal
 				            }
 
 				            ev_gl->musica_nivel_actual = Mix_LoadMUS(ev_gl->playlist.rutas_audio[0]);
-										
-				            // if (ev_gl->musica_nivel_actual) {
-				            //     Mix_PlayMusic(ev_gl->musica_nivel_actual, 0); /* 0 denota cero repeticiones */
-				            // } else {
-				            //     game_log(LOG_ERROR, "No se pudo cargar audio P1", Mix_GetError());
-				            // }
-
+							
 				        } else {
 				            ev_gl->estado_juego = ESTADO_MENU; /* resguardo si la carpeta esta vacia */
 				        }
@@ -482,7 +415,68 @@ eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_principal
 		}
 }
 
-void teclas_menu_principal(menu_principal_recursos *rec_menu, SDL_Event evento)
+
+void
+ingresar_nombre(event_global *ev_gl, SDL_Event ev)
+{
+
+	jugador	*p1;  
+	jugador *p2;  
+	size_t	 len; /* funciones strlen devuelven size_t*/
+
+	if (ev_gl->estado_juego != ESTADO_INGRESAR_NOMBRE)
+		return;
+
+	if (ev.type == SDL_TEXTINPUT) {
+		if (strlen(ev_gl->nombre_ingresado) + strlen(ev.text.text) < sizeof(ev_gl->nombre_ingresado) - 1)
+			strcat(ev_gl->nombre_ingresado, ev.text.text);
+		return;
+	}
+
+	if (ev.type != SDL_TEXTINPUT)
+		return;
+
+	len =  strlen(ev_gl->nombre_ingresado);
+
+	if (ev.key.keysym.sym == SDLK_BACKSPACE && len > 0) {
+		ev_gl->nombre_ingresado[len - 1] = '\0';
+		return;
+	}
+
+	if (ev.key.keysym.sym != SDLK_RETURN || len == 0)
+		return;
+	
+	p1= &ev_gl->jugadores[0];
+	p2= &ev_gl->jugadores[1];
+
+	if (ev_gl->jugador_pidiendo_nombre == 1) {
+		ranking_agregar(ev_gl->nombre_ingresado,
+		                p1->puntaje + p1->bono_acumulado,
+				p1->perfect, p1->good, p1->bad,
+				p1->miss, p1->tiempo_jugado);
+
+		if (ev_gl->jugadores[1].puntaje >  0) {
+			ev_gl->jugador_pidiendo_nombre = 2;
+			ev_gl->nombre_ingresado[0] = '\0';
+			return;
+		}
+
+	} else if (ev_gl->jugador_pidiendo_nombre == 2) {
+		ranking_agregar(ev_gl->nombre_ingresado,
+				p2->puntaje + p2->bono_acumulado,
+				p2->perfect,p2->good, p2->bad,
+				p2->miss, p2->tiempo_jugado);
+	}
+	
+	SDL_StopTextInput();
+	ranking_ordenar();
+	ranking_guardar();
+	ev_gl->ranking_cursor = 0;
+	ev_gl->estado_juego = ESTADO_RANKING;
+}
+
+void
+teclas_menu_principal(menu_recursos *rec_menu, SDL_Event evento)
 {
 	int opcion_anterior = rec_menu->opcion;
 
@@ -566,8 +560,8 @@ evaluar_golpe(int carril_presionado, int jugador, event_global *ev_gl)
     }
 }
 
-void teclas_juego_principal(event_global
-                         *ev_gl, SDL_Event evento)
+void
+teclas_juego_principal(event_global *ev_gl, SDL_Event evento)
 {
 	int carril_presionado = -1;
 	int jugador = -1;
@@ -584,7 +578,10 @@ void teclas_juego_principal(event_global
 	}
 	if (ev_gl->pausado) return;
 	/* Carriles P1 */
-	if (evento.key.keysym.sym == SDLK_h)      { carril_presionado = 0; jugador = 1; }
+	if (evento.key.keysym.sym == SDLK_h) {
+		 carril_presionado = 0;
+		 jugador = 1;
+	}
 	else if (evento.key.keysym.sym == SDLK_j) { carril_presionado = 1; jugador = 1; }
 	else if (evento.key.keysym.sym == SDLK_k) { carril_presionado = 2; jugador = 1; }
 	else if (evento.key.keysym.sym == SDLK_l) { carril_presionado = 3; jugador = 1; }
@@ -600,8 +597,8 @@ void teclas_juego_principal(event_global
 }
 
 
-void manejo_mando(event_global
-                 *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void
+manejo_mando(event_global *ev_gl, SDL_Event evento, menu_recursos *rec_menu)
 {
 	if (evento.type == SDL_CONTROLLERDEVICEADDED) 
 	{
@@ -659,7 +656,7 @@ void manejo_mando(event_global
 }
 
 void botones_mando_juego_principal(event_global
-                                 *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+                                 *ev_gl, SDL_Event evento, menu_recursos *rec_menu)
 {
 	int carril_presionado = -1;
 	int offset_carril = -1;
@@ -706,7 +703,7 @@ void botones_mando_juego_principal(event_global
 	
 }
 
-void botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_principal_recursos *rec_menu)
+void botones_mando_menu_principal(event_global *ev_gl, SDL_Event evento, menu_recursos *rec_menu)
 {
 	int opcion_anterior = rec_menu->opcion;
 

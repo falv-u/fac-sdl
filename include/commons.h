@@ -138,7 +138,7 @@ typedef enum {
 	ESTADO_SALIR,
 } ESTADO_ACTUAL;
 
-typedef struct {
+typedef struct Play_D{
     char rutas[MAX_CANCIONES_PLAYLIST][512];
     char titulos[MAX_CANCIONES_PLAYLIST][256];      
     float duraciones[MAX_CANCIONES_PLAYLIST];        
@@ -149,7 +149,7 @@ typedef struct {
     bool modo_playlist;    
 } Play_D;
 
-typedef struct {
+typedef struct jugador {
 	SDL_GameController *mando;
 	int puntaje;
 	int perfect, good, bad, miss;
@@ -165,26 +165,33 @@ typedef struct {
 	SDL_Color color_pared;
 } jugador;
 
-typedef struct {
-	menu_recursos	rec_menu;
+typedef struct visuales {
 	SDL_Renderer	*renderizado;
 	SDL_Window	*ventana;
 	TTF_Font	*fuente[2];
+	float iris_radius;
+	bool		is_iris_fading_out;
+} visuales;
 
-
-	ESTADO_ACTUAL	estado_juego;
+typedef struct partida {
+	
+	float tiempo_juego;
 	Mapa		mapa_actual;
 	Mix_Music	*musica_nivel_actual;
-	Play_D		playlist;
 	jugador		jugadores[2];
-
-
-	float tiempo_juego;
-
-	float iris_radius;
-
 	int opcion_dificultad;
+
 	int indice_nota_actual;
+        bool		pausado;
+	bool		musica_iniciada;
+} partida;
+
+typedef struct sistema {
+	Play_D		playlist;
+
+	char nombre_ingresado[32];
+        bool		corriendo;
+
 	int jugador_pidiendo_nombre;
 
 	/* fila seleccionada en la pantalla de ranking */
@@ -192,13 +199,14 @@ typedef struct {
 	/* que fila se esta mostrando en detalle */
 	int ranking_detalle_indice;
 	int last_frame_time;
+} sistema;
 
-        bool		pausado;
-        bool		corriendo;
-	bool		is_iris_fading_out;
-	bool		musica_iniciada;
-
-	char nombre_ingresado[32];
+typedef struct event_global {
+	visuales	vis;
+	partida		par;
+	sistema		sis;
+	menu_recursos	*rec_menu;
+	ESTADO_ACTUAL	estado_juego;
 } event_global;
 
 typedef enum {

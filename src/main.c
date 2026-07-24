@@ -23,7 +23,7 @@
 #include "log.h"
 
 void	 iniciar_componente(void);
-void	 iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl);
+void	 iniciar_recursos_menu(event_global *ev_gl);
 void	 iniciar_event_global(event_global *ev_gl);
 void	 manejo_delta_time(float *dt, unsigned int *l_frame, event_global *ev);
 void	 manejo_estado(event_global *ev, menu_recursos *rec_menu, SDL_Event);
@@ -31,6 +31,7 @@ void	 manejo_estado(event_global *ev, menu_recursos *rec_menu, SDL_Event);
 void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event ev);
 void	 teclas_menu_principal(menu_recursos *rec_menu, SDL_Event ev);
 void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
+
 /* sub-funciones para eventos accionados por/de usuario */
 void	 ingresar_nombre(event_global *ev_gl, SDL_Event ev);
 
@@ -49,10 +50,10 @@ void	 apagar_sdl(event_global *ev_gl, menu_recursos *rec_menu);
 int
 main(void)
 {
-	menu_recursos	rec_menu;	
+	menu_recursos		rec_menu;	
 	event_global		ev_gl;
 	unsigned int		last_frame_time;
-	float 			delta_time;
+	float			delta_time;
 	int			i;
 
 	SDL_Event evento;
@@ -65,18 +66,17 @@ main(void)
 	/*
 	 * la ventana tambien se crea aqui al estar
 	 * anclada a los eventos globales como cerrar
+	 * menu recursos esta anclado ahora a eventos globales
 	 */
 	iniciar_event_global(&ev_gl);
 
 	ranking_cargar();
 
-	iniciar_recursos_menu(&rec_menu, &ev_gl);
 
 	while (ev_gl.corriendo) {
 		manejo_delta_time(&delta_time, &last_frame_time, &ev_gl);
 
 		update(delta_time, &ev_gl,  &rec_menu);
-
 		/*
 		 * ignorar warning ya que se declara al incio de la
 		 * funcion para los eventos de usuario.
@@ -178,39 +178,54 @@ apagar_sdl(event_global *ev_gl, menu_recursos *rec_menu)
 }
 
 void
-iniciar_recursos_menu(menu_recursos *rec_menu, event_global *ev_gl)
+iniciar_recursos_menu(event_global *ev_gl)
 {
-	rec_menu->opcion=0;
-	rec_menu->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0001.png");
+	SDL_Surface	*surf;
+	menu_recursos	*rec;
 
-	rec_menu->color1.r = 255;
-	rec_menu->color1.g = 255;
-	rec_menu->color1.b = 255;
-
-	rec_menu->color2.r = 70;
-	rec_menu->color2.g = 255;
-	rec_menu->color2.b = 0;
-
-	rec_menu->color3.r = 0;
-	rec_menu->color3.g = 34;
-	rec_menu->color3.b = 255;
+	rec = ev_gl->rec_menu;
+	if (rec == NULL)
+		return;
 	
-	rec_menu->musica_fondo= Mix_LoadMUS("./assets/sfx/menu.mp3");
-	rec_menu->sfx_opcion = Mix_LoadWAV("./assets/sfx/ui-menu-onset.ogg");
+	rec->opcion=0;
+	rec->sprites = IMG_LoadTexture(ev_gl->renderizado, "./assets/Sprite-0001.png");
+
+	rec->color1.r = 255;
+	rec->color1.g = 255;
+	rec->color1.b = 255;
+
+	rec->color2.r = 70;
+	rec->color2.g = 255;
+	rec->color2.b = 0;
+
+	rec->color3.r = 0;
+	rec->color3.g = 34;
+	rec->color3.b = 255;
+	
+	rec->musica_fondo= Mix_LoadMUS("./assets/sfx/menu.mp3");
+	rec->sfx_opcion = Mix_LoadWAV("./assets/sfx/ui-menu-onset.ogg");
 
 
-	rec_menu->scroll_edificios = 0.0f;
-	rec_menu->vel_edificios = 300.0f;
+	rec->scroll_edificios = 0.0f;
+	rec->vel_edificios = 300.0f;
 
-	if (rec_menu->musica_fondo)
-		Mix_PlayMusic(rec_menu->musica_fondo, -1);
+
+	if (ev_gl->fuente[0]) {
+	        SDL_Surface *surf = TTF_RenderText_Solid(ev_gl->fuente[0], "Feel, Amplify and Conquer!", rec->color2);
+	        rec->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
+	        rec->titulo_w = surf->w;
+	        rec->titulo_h = surf->h;
+	        SDL_FreeSurface(surf);
+	}
+	if (rec->musica_fondo)
+		Mix_PlayMusic(rec->musica_fondo, -1);
 }
 
 void
 iniciar_event_global(event_global *ev_gl)
 {
 	int i;
-	
+
 	ev_gl->estado_juego = ESTADO_MENU;
 	ev_gl->corriendo = true;
 	ev_gl->pausado = false; 
@@ -232,17 +247,17 @@ iniciar_event_global(event_global *ev_gl)
 	ev_gl->ranking_cursor = 0;
 	ev_gl->ranking_detalle_indice = 0;
 
-	rec_menu->fuente[0] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
-	rec_menu->fuente[1] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
+	ev_gl->fuente[0] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
+	ev_gl->fuente[1] = TTF_OpenFont("./assets/fonts/CyberHorizon-ARAvL.ttf", 64);
     
 
-	if (rec_menu->fuente[0]) {
-	        SDL_Surface *surf = TTF_RenderText_Solid(rec_menu->fuente, "Feel, Amplify and Conquer!", rec_menu->color2);
-	        rec_menu->textura_titulo = SDL_CreateTextureFromSurface(ev_gl->renderizado, surf);
-	        rec_menu->titulo_w = surf->w;
-	        rec_menu->titulo_h = surf->h;
-	        SDL_FreeSurface(surf);
+	ev_gl->rec_menu = malloc(sizeof(menu_recursos));
+	if (ev_gl->rec_menu == NULL) {
+		game_log(LOG_ERROR, "NO SE ASIGNO MEMORIA A RECURSOS DEL MENU, FALLO CRITICO");
+		return;
 	}
+
+	iniciar_recursos_menu(ev_gl);
 
 	for (i = 0; i < SDL_NumJoysticks(); i++) {
 		if (!SDL_IsGameController(i))

@@ -29,7 +29,10 @@ void	 manejo_delta_time(float *dt, unsigned int *l_frame, event_global *ev);
 void	 manejo_estado(event_global *ev, menu_recursos *rec_menu, SDL_Event);
 
 void	 event_global_accionados_simples(event_global *ev_gl, SDL_Event ev);
-void	 teclas_menu_principal(menu_recursos *rec_menu, SDL_Event ev);
+void	 eventos_menu(SDL_Event *ev, event_global *ev_gl);
+void	 eventos_ranking(SDL_Event *ev, event_global *ev_gl);
+void	 evento_Sel_nivel(SDL_Event *ev, event_global *ev_gl);
+void	 iniciar_partida(event_global *ev_gl);
 void	 eventos_accionados_usuario(event_global *ev_gl, SDL_Event ev, menu_recursos *rec_menu);
 
 /* sub-funciones para eventos accionados por/de usuario */
@@ -90,13 +93,6 @@ main(void)
 	return 0;
 }
 
-void
-eventos_menu(SDL_Event *event)
-{
-	if (!(event->type == SDL_KEYDOWN)) 
-		return;
-	
-}
 void
 manejo_estado(event_global *ev_gl, menu_recursos *rec_menu, SDL_Event evento)
 {
@@ -340,104 +336,156 @@ manejo_delta_time(float *dt, unsigned int *last_frame_time, event_global *ev_gl)
 
 
 void
+eventos_menu(SDL_Event *ev, event_global *ev_gl)
+{
+	menu_recursos	*rec;
+	int		opcion_anterior;
+
+	rec = ev_gl->rec_menu;
+	opcion_anterior = rec->opcion;
+
+	if ( ev->type != SDL_KEYDOWN ) 
+		return;
+
+	switch (ev->key.keysym.sym) {
+	case SDLK_UP:
+		if ( rec->opcion > 0 )
+			rec->opcion--;
+		else
+			rec->opcion = 2;
+	case SDLK_DOWN:
+		if ( rec->opcion < 2 )
+			rec->opcion++;
+		else
+			rec->opcion = 0;
+	case SDLK_RETURN:
+		switch (rec->opcion) {
+		case 0:
+			ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
+			break;
+		case 1:
+			ev_gl->estado_juego = ESTADO_SALIR;
+			break;
+		case 2:
+			ev_gl->estado_juego = ESTADO_RANKING;
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		return;
+	}
+
+	if (opcion_anterior != rec->opcion && rec->sfx_opcion != NULL)
+		Mix_PlayChannel(-1, rec->sfx_opcion, 0);
+}
+void
+iniciar_partida(event_global *ev_gl)
+{
+	generar_playlist_aleatoria(ev_gl, ev_gl->par.opcion_dificultad + 1);
+	reiniciar_puntajes(ev_gl);
+        if ( ev_gl->sis.playlist.modo_playlist && ev_gl->sis.playlist.cantidad > 0 ) {
+		if (es_alfombra_de_baile(ev_gl->par.jugadores[0].mando))
+			ev_gl->par.mapa_actual = cargar_nivel_humanizado(ev_gl->sis.playlist.rutas[0], 0, 3);
+		else
+			ev_gl->par.mapa_actual = cargar_nivel(ev_gl->sis.playlist.rutas[0]);
+
+		ev_gl->par.tiempo_juego = 0.0f;
+		ev_gl->par.musica_iniciada = false;
+		ev_gl->estado_juego = ESTADO_CARGA;
+
+		game_log(LOG_INFO, "Iniciando partida aleatoria.");
+
+		if (ev_gl->par.musica_nivel_actual != NULL) {
+			Mix_HaltMusic();
+			Mix_FreeMusic(ev_gl->par.musica_nivel_actual);
+		}
+
+		ev_gl->par.musica_nivel_actual = Mix_LoadMUS(ev_gl->sis.playlist.rutas_audio[0]);
+
+		} else {
+			ev_gl->estado_juego = ESTADO_MENU; /* resguardo si la carpeta esta vacia */
+		}
+}
+
+void
+evento_Sel_nivel(SDL_Event *ev, event_global *ev_gl)
+{
+	if ( ev->type != SDL_KEYDOWN ) 
+		return;
+
+	switch (ev->key.keysym.sym){
+	case SDLK_UP:
+		if ( ev_gl->par.opcion_dificultad > 0 )
+			ev_gl->par.opcion_dificultad--;
+		break;
+	case SDLK_DOWN:
+		if ( ev_gl->par.opcion_dificultad < 3) 
+			ev_gl->par.opcion_dificultad++;
+		break;
+	case SDLK_RETURN:
+		iniciar_partida(ev_gl);
+		break;
+	default:
+		break;
+	}
+}
+
+void
+eventos_ranking(SDL_Event *ev, event_global *ev_gl)
+{
+	int total_elementos;
+
+	if ( ev->type != SDL_KEYDOWN ) 
+		return;
+	total_elementos = ranking_obtener_cantidad();
+	switch (ev->key.keysym.sym){
+	case SDLK_UP:
+		if (ev_gl->sis.ranking_cursor > 0 ) 
+			ev_gl->sis.ranking_cursor--;
+		break;
+	case SDLK_DOWN:
+	   if (total_elementos > 0 &&  ev_gl->sis.ranking_cursor < total_elementos - 1)
+			ev_gl->sis.ranking_cursor++;
+		break;
+	case SDLK_RETURN:
+		if ( total_elementos > 0) {
+		        ev_gl->sis.ranking_detalle_indice = ev_gl->sis.ranking_cursor;
+		        ev_gl->estado_juego = ESTADO_DETALLE_JUGADOR;
+	        }
+		break;
+	case SDLK_BACKSPACE:
+		ev_gl->estado_juego = ESTADO_MENU;
+		break;
+	case SDLK_LEFT:
+		ev_gl->estado_juego = ESTADO_MENU;
+		break;
+	default:
+		break;
+	}
+}
+void
 eventos_accionados_usuario(event_global *ev_gl, SDL_Event evento, menu_recursos *rec_menu)
 {
+
 	while (SDL_PollEvent(&evento)) {
 		event_global_accionados_simples(ev_gl,evento);
 		manejo_mando(ev_gl, evento, rec_menu);
 
-			if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0 || evento.type == SDL_CONTROLLERBUTTONDOWN) {
-				ingresar_nombre(ev_gl, evento);
-				if (ev_gl->estado_juego == ESTADO_MENU) {
-					teclas_menu_principal(rec_menu, evento);
+		if (evento.type == SDL_KEYDOWN && evento.key.repeat == 0 || evento.type == SDL_CONTROLLERBUTTONDOWN) {
+			ingresar_nombre(ev_gl, evento);
+			if (ev_gl->estado_juego == ESTADO_MENU) 
+				eventos_menu(&evento, ev_gl);
+			if (ev_gl->estado_juego == ESTADO_JUEGO)
+				teclas_juego_principal(ev_gl, evento);
 
-					if (evento.key.keysym.sym == SDLK_RETURN) {
-
-						if (rec_menu->opcion == 0)
-							ev_gl->estado_juego = ESTADO_SELECT_NIVELES;
-						if (rec_menu->opcion == 1)
-							ev_gl->estado_juego = ESTADO_SALIR;
-						if (rec_menu->opcion == 2) {
-							ev_gl->sis.ranking_cursor = 0;
-							ev_gl->estado_juego = ESTADO_RANKING;
-						}
-					}
-				} else if (ev_gl->estado_juego == ESTADO_JUEGO)
-        {
-			    teclas_juego_principal(ev_gl, evento);
-        } else if (ev_gl->estado_juego == ESTADO_SELECT_NIVELES) {
-				if (evento.key.keysym.sym == SDLK_UP && ev_gl->par.opcion_dificultad > 0) {
-				        ev_gl->par.opcion_dificultad--;
-				if (rec_menu->sfx_opcion)
-				        	Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
-				}
-				if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->par.opcion_dificultad < 2) {
-				        ev_gl->par.opcion_dificultad++;
-				        if (rec_menu->sfx_opcion)
-						 Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
-				}
-				    if (evento.key.keysym.sym == SDLK_ESCAPE) {
-				        ev_gl->estado_juego = ESTADO_MENU; /* Volver al menú principal */
-				    }
-				    if (evento.key.keysym.sym == SDLK_RETURN)
-				    {
-				        /* Dificultad mapea a 1, 2 o 3 */
-				        generar_playlist_aleatoria(ev_gl, ev_gl->par.opcion_dificultad + 1);
-				        reiniciar_puntajes(ev_gl);
-
-				        if (ev_gl->sis.playlist.modo_playlist && ev_gl->sis.playlist.cantidad > 0)
-				        {
-						if (es_alfombra_de_baile(ev_gl->par.jugadores[0].mando))
-						  ev_gl->par.mapa_actual = cargar_nivel_humanizado(ev_gl->sis.playlist.rutas[0], 0, 3);
-						else
-							 ev_gl->par.mapa_actual = cargar_nivel(ev_gl->sis.playlist.rutas[0]);
-					          ev_gl->par.tiempo_juego = 0.0f;
-					          ev_gl->par.musica_iniciada = false;
-					          ev_gl->estado_juego = ESTADO_CARGA;
-					          game_log(LOG_INFO, "Iniciando partida aleatoria.", 0);
-
-					          if (ev_gl->par.musica_nivel_actual != NULL) {
-				              Mix_HaltMusic();
-				              Mix_FreeMusic(ev_gl->par.musica_nivel_actual);
-				            }
-
-				            ev_gl->par.musica_nivel_actual = Mix_LoadMUS(ev_gl->sis.playlist.rutas_audio[0]);
-							
-				        } else {
-				            ev_gl->estado_juego = ESTADO_MENU; /* resguardo si la carpeta esta vacia */
-				        }
-				    }
-				}
-				else 
-				else if (ev_gl->estado_juego == ESTADO_RANKING)
-				{
-				   if (evento.key.keysym.sym == SDLK_UP && ev_gl->ranking_cursor > 0)
-				       ev_gl->ranking_cursor--;
-				     
-				   if (evento.key.keysym.sym == SDLK_DOWN && ev_gl->ranking_cursor < ranking_obtener_cantidad() - 1)
-				        ev_gl->ranking_cursor++;
-      
-				    if (evento.key.keysym.sym == SDLK_RETURN && ranking_obtener_cantidad() > 0)
-				    {
-				        ev_gl->ranking_detalle_indice = ev_gl->ranking_cursor;
-				        ev_gl->estado_juego = ESTADO_DETALLE_JUGADOR;
-				    }
-  
-				    if (evento.key.keysym.sym == SDLK_BACKSPACE)
-				    {
-				        ev_gl->estado_juego = ESTADO_MENU;
-				    }
-				}
-				else if (ev_gl->estado_juego == ESTADO_DETALLE_JUGADOR)
-				{
-				   if (evento.key.keysym.sym == SDLK_BACKSPACE)
-				   {
-				       ev_gl->estado_juego = ESTADO_RANKING;
-				   }
-				}
-
-			}
+			if (ev_gl->estado_juego == ESTADO_SELECT_NIVELES)
+				evento_Sel_nivel(&evento, ev_gl);
+			if (ev_gl->estado_juego == ESTADO_RANKING)
+				eventos_ranking(&evento, ev_gl);
 		}
+	}
 }
 
 
@@ -500,27 +548,6 @@ ingresar_nombre(event_global *ev_gl, SDL_Event ev)
 	ev_gl->estado_juego = ESTADO_RANKING;
 }
 
-void
-teclas_menu_principal(menu_recursos *rec_menu, SDL_Event evento)
-{
-	int opcion_anterior = rec_menu->opcion;
-
-	if (evento.key.keysym.sym == SDLK_UP && rec_menu->opcion > 0)
-		rec_menu->opcion--;
-	if (evento.key.keysym.sym == SDLK_DOWN && rec_menu->opcion < 3)
-		rec_menu->opcion++;
-
-	if (rec_menu->opcion > 2)
-		rec_menu->opcion = 0; 
-	if (rec_menu->opcion < 0) 
-		rec_menu->opcion = 2;
-
-
-	if(opcion_anterior != rec_menu->opcion) {
-		if (rec_menu->sfx_opcion)
-	    		Mix_PlayChannel(-1, rec_menu->sfx_opcion, 0);
-	}
-}
 
 void
 activar_efecto_pared(event_global *ev_gl, int num_jugador, int resultado) 
